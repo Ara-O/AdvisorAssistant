@@ -1,4 +1,7 @@
 import './assets/main.css'
+import 'vue-cal/dist/vuecal.css'
+// @ts-expect-error
+import VueCal from 'vue-cal'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
