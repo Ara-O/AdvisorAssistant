@@ -6,6 +6,13 @@
         {{ course.description }}
       </option>
     </select>
+    <br />
+
+    <input type="text" placeholder="AWSALB" v-model="awsalb" />
+    <input type="text" placeholder="AWSALBCORS" v-model="awsalbcors" />
+    <input type="text" placeholder="JSESSIONID" v-model="jsessionid" />
+
+    <br />
     <button @click="download_course">Download every course</button>
     <a
       href="https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/classSearch/classSearch"
@@ -19,11 +26,13 @@
             <summary>{{ category }}</summary>
             <div
               v-for="course in courses"
-              style="background-color: skyblue"
+              :style="{ 'background-color': course.is_selected ? 'skyblue' : 'pink' }"
               @click="() => addStuff(course)"
             >
               <p>{{ course.course_name }}</p>
               <p>{{ course.course_number }}</p>
+              <p>Type: {{ course.meeting_type_description }}</p>
+              <p>Section: {{ course.section }}</p>
             </div>
           </details>
         </div>
@@ -78,16 +87,6 @@ const showDialog = false
 const selectedEvent = {} as any
 
 const events = ref<any>([
-  {
-    start: '2025-05-05 10:30',
-    end: '2025-05-05 11:45',
-    // You can also define event dates with Javascript Date objects:
-    // start: new Date(2025, 11 - 1, 16, 10, 30),
-    // end: new Date(2025, 11 - 1, 16, 11, 30),
-    title: 'Doctor appointment',
-    content: '<i class="icon material-icons">local_hospital</i>',
-    class: 'health',
-  },
   // {
   //   start: '2025-11-18 10:00',
   //   end: '2025-11-18 14:00',
@@ -98,7 +97,7 @@ const events = ref<any>([
 ])
 
 function onEventClick(event: any) {
-  console.log(event)
+  // console.log(event)
   // Prevent navigating to narrower view (default vue-cal behavior).
 }
 
@@ -106,12 +105,19 @@ const course_mappings = ref<Course[]>([])
 const selected_course = ref<Course>()
 const ordered_courses = ref<any>({})
 const chosen_courses = ref<any>([])
+const jsessionid = ref('')
+const awsalb = ref('')
+const awsalbcors = ref('')
+
 async function download_course() {
-  console.log(selected_course.value)
+  // console.log(selected_course.value)
   try {
     let res = await axios.get(`${import.meta.env.VITE_API_URL}/fetch_courses`, {
       params: {
         term: selected_course.value,
+        awsalb: awsalb.value,
+        awsalbcors: awsalbcors.value,
+        jsessionid: jsessionid.value,
       },
     })
 
@@ -127,20 +133,35 @@ async function download_course() {
       }
     })
 
-    console.log(ordered_courses)
-    console.log(course_categories)
+    // console.log(ordered_courses)
+    // console.log(course_categories)
 
-    console.log(res.data)
+    // console.log(res.data)
   } catch (err) {
     console.log(err)
   }
 }
 
 function addStuff(course: any) {
-  chosen_courses.value.push(course)
-  console.log(chosen_courses)
+  // console.log(course)
+  if (!course.is_selected) {
+    course.is_selected = true
+    chosen_courses.value.push(course)
+  } else {
+    course.is_selected = false
+    // @ts-ignore
+    chosen_courses.value = chosen_courses.value.filter(
+      (coursed: any) => coursed.course_id !== course.course_id,
+    )
 
-  let enddate = course.start_data.split('/')
+    // console.log(events.value)
+    // console.log(course.course_id)
+    events.value = events.value.filter((classs: any) => classs.course_id !== course.course_id)
+    return
+  }
+  // console.log(chosen_courses)
+
+  let enddate = course.start_date.split('/')
   let formattedEndDate = enddate[2] + '-' + enddate[1] + '-' + enddate[0]
   let startdate = course.end_date.split('/')
   let formattedStartDate = startdate[2] + '-' + startdate[1] + '-' + startdate[0]
@@ -177,8 +198,9 @@ function addStuff(course: any) {
       start: starttime,
       end: endtimes,
       title: course.course_name,
-      content: '<i class="icon material-icons">local_hospital</i>',
+      content: `<p>${course.building}</p>`,
       class: 'health',
+      course_id: course.course_id,
     })
   })
 
@@ -216,5 +238,17 @@ onMounted(async () => {
   border: 1px solid rgb(235, 82, 82);
   color: #fff;
   padding: 10px 0px;
+}
+
+.vuecal__event-title {
+  font-size: 12px;
+}
+
+.vuecal__event-time {
+  font-size: 12px;
+}
+
+.vuecal__event-content {
+  font-size: 12px;
 }
 </style>

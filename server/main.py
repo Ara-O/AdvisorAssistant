@@ -33,10 +33,11 @@ def formatResults(courses):
             course_dict["friday"] = meetings["meetingTime"]["friday"]
             course_dict["saturday"] = meetings["meetingTime"]["saturday"]
             course_dict["sunday"] = meetings["meetingTime"]["sunday"]
-            course_dict["start_data"] = meetings["meetingTime"]["startDate"]
+            course_dict["start_date"] = meetings["meetingTime"]["startDate"]
             course_dict["end_date"] = meetings["meetingTime"]["endDate"]
             course_dict["building"] = meetings["meetingTime"]["building"]
             course_dict["campus_description"] = meetings["meetingTime"]["campusDescription"]
+            course_dict["meeting_type_description"] = meetings["meetingTime"]["meetingTypeDescription"]
 
         formattedResult.append(course_dict)
         
@@ -64,7 +65,7 @@ def proxy():
 
 @app.route("/fetch_courses", methods=['GET'])
 def fetch_course():
-    term = "202510"
+    term = request.args.get("term")
     page_size = 10
     max_page_size = 500
     
@@ -82,9 +83,9 @@ def fetch_course():
     # print("CORS:", awsalbcors)
         
     cookies = {
-            "AWSLAB": "QVmj6bZ8ppX88sfXcnWSvplCxA45FH9U+RU/ZqDW36wYbRvaEXpkbFkyaLmOsisMDIETiVzbDL6Gs0iG4qcytef8fzWviKkd5WoUkyh+YRWgepIwnJNROfGKnLBi",
-            "AWSALBCORS": "QVmj6bZ8ppX88sfXcnWSvplCxA45FH9U+RU/ZqDW36wYbRvaEXpkbFkyaLmOsisMDIETiVzbDL6Gs0iG4qcytef8fzWviKkd5WoUkyh+YRWgepIwnJNROfGKnLBi",
-            "JSESSIONID":  "7D25B12DB8A3256C34E921E2B72C4F72",
+            "AWSLAB": request.args.get("awslab"),
+            "AWSALBCORS": request.args.get("awsalbcors"),
+            "JSESSIONID":  request.args.get("jsessionid"),
             # "taxitag_main": "v_id:0193db54b63500803a61c3340d7805046005b00900bd0$_sn:26$_se:3$_ss:0$_st:1740268426041$dc_visit:26$ses_id:1740266596186%3Bexp-session$_pn:3%3Bexp-session$dc_event:3%3Bexp-session$tag_session_91:1%3Bexp-session"
     }
     
