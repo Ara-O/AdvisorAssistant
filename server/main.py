@@ -43,7 +43,10 @@ def formatResults(courses):
         
     return formattedResult
         
-        
+@app.route('/health', methods=['GET'])
+def health():
+    return "healthy :D"
+
             
 
 @app.route('/course_proxy', methods=['GET'])
@@ -144,5 +147,5 @@ def fetch_course():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)  
+    app.run(host='0.0.0.0', port=10000, debug=True)  
 
