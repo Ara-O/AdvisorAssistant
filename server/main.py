@@ -82,9 +82,9 @@ def fetch_course():
     # print("CORS:", awsalbcors)
         
     cookies = {
-            "AWSLAB": "d1XX3GQOrSKBMsHP4suPQfWTSKCGbHogdxSRbEhHrodDpOWmiLXK9humSEvn82bMW3ztD6Mf9hUXNPafM2sZ1Uj2OfaUYnJYakjKrWPlZdyLme8stRNAmrivpuZz",
-            "AWSALBCORS": "d1XX3GQOrSKBMsHP4suPQfWTSKCGbHogdxSRbEhHrodDpOWmiLXK9humSEvn82bMW3ztD6Mf9hUXNPafM2sZ1Uj2OfaUYnJYakjKrWPlZdyLme8stRNAmrivpuZz",
-            "JSESSIONID":  "A0773ADB8D0C64D7919B3FBA62FFB4C5",
+            "AWSLAB": "QVmj6bZ8ppX88sfXcnWSvplCxA45FH9U+RU/ZqDW36wYbRvaEXpkbFkyaLmOsisMDIETiVzbDL6Gs0iG4qcytef8fzWviKkd5WoUkyh+YRWgepIwnJNROfGKnLBi",
+            "AWSALBCORS": "QVmj6bZ8ppX88sfXcnWSvplCxA45FH9U+RU/ZqDW36wYbRvaEXpkbFkyaLmOsisMDIETiVzbDL6Gs0iG4qcytef8fzWviKkd5WoUkyh+YRWgepIwnJNROfGKnLBi",
+            "JSESSIONID":  "7D25B12DB8A3256C34E921E2B72C4F72",
             # "taxitag_main": "v_id:0193db54b63500803a61c3340d7805046005b00900bd0$_sn:26$_se:3$_ss:0$_st:1740268426041$dc_visit:26$ses_id:1740266596186%3Bexp-session$_pn:3%3Bexp-session$dc_event:3%3Bexp-session$tag_session_91:1%3Bexp-session"
     }
     
