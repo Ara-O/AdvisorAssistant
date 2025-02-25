@@ -92,10 +92,10 @@ def fetch_course():
 
     # Set up Chrome WebDriver
     chrome_options = Options()
-    # chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
-    # chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
-    # chrome_options.add_argument("--disable-dev-shm-usage")
-    # chrome_options.add_argument("--disable-gpu") 
+    chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
+    chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu") 
     # chrome_options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")  # Use a unique temp directory
     # chrome_options.binary_location = "/opt/google/chrome/chrome"  # Use the correct Chrome binary
     
