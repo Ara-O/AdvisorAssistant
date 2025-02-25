@@ -134,6 +134,9 @@ def fetch_course():
         
         # time.sleep(10)
         
+        dropdown = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.XPATH, "//ul[@class='select2-results']"))
+)
         option = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//ul[@class='select2-results']//div"))
         )
