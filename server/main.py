@@ -165,7 +165,10 @@ def fetch_course():
         AWSALB = cookie_dict.get("AWSALB", "")
         AWSALBCORS = cookie_dict.get("AWSALBCORS", "")
         JSESSIONID = cookie_dict.get("JSESSIONID", "")
-
+    else:
+        JSESSIONID = request.args.get("jsessionid")
+        AWSALB = request.args.get("awsalb")
+        AWSALBCORS = request.args.get("awsalbcors")
     # Print values
     print("AWSALB:", AWSALB)
     print("AWSALBCORS:", AWSALBCORS)
