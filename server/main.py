@@ -4,6 +4,7 @@ import requests
 import json
 import tempfile
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
@@ -11,6 +12,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import time
+from selenium.webdriver.support import expected_conditions as EC
 
 app = Flask(__name__)
 CORS(app=app)
@@ -90,10 +92,10 @@ def fetch_course():
 
     # Set up Chrome WebDriver
     chrome_options = Options()
-    chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
-    chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-gpu") 
+    # chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
+    # chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
+    # chrome_options.add_argument("--disable-dev-shm-usage")
+    # chrome_options.add_argument("--disable-gpu") 
     # chrome_options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")  # Use a unique temp directory
     # chrome_options.binary_location = "/opt/google/chrome/chrome"  # Use the correct Chrome binary
     
@@ -126,10 +128,19 @@ def fetch_course():
         driver.implicitly_wait(5)
         print("Clicked search result")
         
-        drop_down=driver.find_element(by=By.ID,value="select2-results-1")
-        first_option = drop_down.find_element(By.XPATH, ".//li[1]//div/div") 
-        first_option.click()
+        # first_option = driver.find_element(by=By.ID,value="select2-results-1")
+        # first_option.click()
+        # print("first option should be clicked")
         
+        # time.sleep(10)
+        
+        option = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//ul[@class='select2-results']//div"))
+        )
+        option.click()
+        # drop_down=driver.find_element(by=By.ID,value="select2-results-1")
+        # first_option = drop_down.find_element(By.XPATH, ".//li[1]//div/div") 
+        # first_option.click()
         print("clicked first result 1")
         driver.implicitly_wait(5)
         continue_button = driver.find_element(by=By.ID,value="term-go")
