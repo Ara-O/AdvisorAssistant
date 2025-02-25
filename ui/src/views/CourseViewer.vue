@@ -1,5 +1,5 @@
 <template>
-  <main>
+  <main class="">
     <!-- SELECT COURSE POPUP -->
     <section
       v-if="!courses_have_been_fetched"
@@ -58,44 +58,50 @@
       <p class="mt-5" v-if="courses_are_being_fetched">Fetching courses, please wait...</p>
     </section>
 
-    <!-- OR ELSE -->
-
-    <section v-else>
-      <!-- <h3>Fetch all Courses</h3>
-      <select name="term" id="term" v-model="selected_term">
-        <option
-          :value="{ code: course.code, name: course.description }"
-          v-for="(course, idx) in retrieved_terms"
-        >
-          {{ course.description }}
-        </option>
-      </select>
-      <br /> -->
-
-      <br />
-      <button @click="download_course">Download every course</button>
-      <a
-        href="https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/classSearch/classSearch"
-        target="_blank"
-        >Get cookies</a
-      >
-      <div style="display: flex">
-        <div>
-          <div v-for="(courses, category) in ordered_courses">
-            <details>
-              <summary>{{ category }}</summary>
-              <div
-                v-for="course in courses"
-                :style="{ 'background-color': course.is_selected ? 'skyblue' : 'pink' }"
-                @click="() => addStuff(course)"
-              >
-                <p>{{ course.course_name }}</p>
-                <p>{{ course.course_number }}</p>
-                <p>Type: {{ course.meeting_type_description }}</p>
-                <p>Section: {{ course.section }}</p>
-                <p>Start time: {{ course.meeting_begin_time }}</p>
-              </div>
-            </details>
+    <!-- COURSES TREE 
+ 
+    -->
+    <section class="px-8 py-5" v-else>
+      <div class="flex gap-10 flex-row">
+        <div class="w-[400px]">
+          <h2 class="text-xl font-text font-bold mb-1">All Courses</h2>
+          <div class="max-h-[600px] box-border overflow-auto">
+            <div v-for="(courses, category) in ordered_courses" class="my-2">
+              <details>
+                <summary class="font-text">{{ category }}</summary>
+                <div
+                  v-for="course in courses"
+                  @click="() => addCourse(course)"
+                  :style="{ 'border-color': course.is_selected ? 'darkblue' : '' }"
+                  class="border box-border px-3 pb-5 pt-4 my-2 rounded-md border-gray-300"
+                >
+                  <p class="font-medium overflow-ellipsis w-80">{{ course.course_name }}</p>
+                  <p class="text-[15px]">
+                    Course Number: {{ course.course_number }} | Section {{ course.section }}
+                  </p>
+                  <p v-if="course.meeting_begin_time" class="text-[15px]">
+                    Time:
+                    {{
+                      course.meeting_begin_time.slice(0, 2) +
+                      ':' +
+                      course.meeting_begin_time.slice(2)
+                    }}
+                    -
+                    {{
+                      course.meeting_end_time.slice(0, 2) + ':' + course.meeting_end_time.slice(2)
+                    }}. Days: {{ formatCourseDays(course) }}
+                  </p>
+                  <p v-else>This course does not have a set meeting time</p>
+                </div>
+              </details>
+            </div>
+          </div>
+          <h2 class="text-xl font-text font-bold mt-5">Selected Courses</h2>
+          <p v-if="chosen_courses.length == 0" class="mt-3">No courses have been selected yet</p>
+          <div v-else>
+            <div v-for="course in chosen_courses">
+              <p class="mt-2">{{ course.course_name }}</p>
+            </div>
           </div>
         </div>
         <!-- TODO: change selected date to current date -->
@@ -103,6 +109,7 @@
           :events="events"
           selected-date="2025-05-05"
           :time-from="9 * 60"
+          hide-view-selector
           hide-title-bar
           :time-to="23 * 60"
           :disable-views="['years', 'year', 'month']"
@@ -112,7 +119,7 @@
       </div>
 
       <!-- Using Vuetify (but we prefer Wave UI 🤘) -->
-      <v-dialog v-model="showDialog">
+      <!-- <v-dialog v-model="showDialog">
         <v-card>
           <v-card-title>
             <v-icon>{{ selectedEvent.icon }}</v-icon>
@@ -131,7 +138,7 @@
             </ul>
           </v-card-text>
         </v-card>
-      </v-dialog>
+      </v-dialog> -->
     </section>
   </main>
 </template>
@@ -148,25 +155,49 @@ type Term = {
 }
 
 const selected_term = ref<Term | null>(null)
-
 const retrieved_terms = ref<Term[]>([])
 const courses_have_been_fetched = ref<boolean>(false)
 const courses_are_being_fetched = ref<boolean>(false)
 const showDialog = false
 const selectedEvent = {} as any
-
 const events = ref<any>([])
+const ordered_courses = ref<any>({})
+const chosen_courses = ref<any>([])
+const jsessionid = ref('')
+const awsalb = ref('')
+const awsalbcors = ref('')
 
 function onEventClick(event: any) {
   // console.log(event)
   // Prevent navigating to narrower view (default vue-cal behavior).
 }
 
-const ordered_courses = ref<any>({})
-const chosen_courses = ref<any>([])
-const jsessionid = ref('')
-const awsalb = ref('')
-const awsalbcors = ref('')
+function formatCourseDays(course: any) {
+  const days = []
+  if (course.monday) {
+    days.push('M')
+  }
+  if (course.tuesday) {
+    days.push('T')
+  }
+  if (course.wednesday) {
+    days.push('W')
+  }
+  if (course.thursday) {
+    days.push('Th')
+  }
+  if (course.friday) {
+    days.push('F')
+  }
+  if (course.saturday) {
+    days.push('Sa')
+  }
+  if (course.sunday) {
+    days.push('Sn')
+  }
+
+  return days.join(' | ')
+}
 
 async function findCourses() {
   try {
@@ -199,7 +230,7 @@ async function findCourses() {
       }
     })
 
-    // After fetching the course, make this
+    // After fetching the course
     courses_are_being_fetched.value = false
     courses_have_been_fetched.value = true
   } catch (err) {
@@ -208,46 +239,9 @@ async function findCourses() {
   }
 }
 
-async function download_course() {
-  // console.log(selected_course.value)
-  try {
-    let res = await axios.get(`${import.meta.env.VITE_API_URL}/fetch_courses`, {
-      params: {
-        // term_name: selected_course.value.name,
-        // term_code: selected_course.value.code,
-        awsalb: awsalb.value,
-        awsalbcors: awsalbcors.value,
-        jsessionid: jsessionid.value,
-      },
-    })
-
-    const courses = res.data
-    const course_categories = new Set()
-
-    courses.forEach((course: any) => {
-      course_categories.add(course.course_description)
-      if (!ordered_courses.value[course.course_description]) {
-        ordered_courses.value[course.course_description] = [course]
-      } else {
-        ordered_courses.value[course.course_description].push(course)
-      }
-    })
-
-    // console.log(ordered_courses)
-    // console.log(course_categories)
-
-    // console.log(res.data)
-  } catch (err) {
-    console.log(err)
-  }
-}
-
-function addStuff(course: any) {
-  // console.log(course)
-  if (!course.is_selected) {
-    course.is_selected = true
-    chosen_courses.value.push(course)
-  } else {
+function addCourse(course: any) {
+  if (course.is_selected) {
+    // Deselect the course and remove it from the chosen courses list if it
     course.is_selected = false
     // @ts-ignore
     chosen_courses.value = chosen_courses.value.filter(
@@ -259,7 +253,9 @@ function addStuff(course: any) {
     events.value = events.value.filter((classs: any) => classs.course_id !== course.course_id)
     return
   }
-  // console.log(chosen_courses)
+
+  course.is_selected = true
+  chosen_courses.value.push(course)
 
   let enddate = course.start_date.split('/')
   let formattedEndDate = enddate[2] + '-' + enddate[1] + '-' + enddate[0]
@@ -273,6 +269,7 @@ function addStuff(course: any) {
   let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
 
   let days = []
+
   if (course.monday) {
     days.push('05')
   }
@@ -288,6 +285,12 @@ function addStuff(course: any) {
   if (course.friday) {
     days.push('09')
   }
+  if (course.saturday) {
+    days.push('10')
+  }
+  if (course.sunday) {
+    days.push('11')
+  }
 
   days.forEach((day) => {
     // TODO: Change this to Current day
@@ -298,22 +301,14 @@ function addStuff(course: any) {
       start: starttime,
       end: endtimes,
       title: course.course_name,
-      content: `<p>${course.building}</p>`,
+      // content: `<p>${course.building}</p>`,
       class: 'health',
       course_id: course.course_id,
     })
   })
-
-  console.log(events)
-  // {
-  //   start: '2025-11-18 10:00',
-  //   end: '2025-11-18 14:00',
-  //   title: 'Golf with John',
-  //   content: '<i class="icon material-icons">golf_course</i>',
-  //   class: 'sport',
-  // },
 }
 
+// Fetch the terms
 onMounted(async () => {
   try {
     let res = await axios.get(`${import.meta.env.VITE_API_URL}/course_proxy`)
@@ -349,5 +344,9 @@ onMounted(async () => {
 
 .vuecal__event-content {
   font-size: 12px;
+}
+
+.vuecal {
+  font-family: 'Raleway' !important;
 }
 </style>
