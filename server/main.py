@@ -90,80 +90,81 @@ def fetch_course():
     
     API_URL = "https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/searchResults/searchResults"
 
-    # Set up Chrome WebDriver
-    chrome_options = Options()
-    chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
-    chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-gpu") 
-    # chrome_options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")  # Use a unique temp directory
-    # chrome_options.binary_location = "/opt/google/chrome/chrome"  # Use the correct Chrome binary
-    
-    driver = webdriver.Chrome(options=chrome_options)
-
-    print("Launching selenium...")
-    try:
-        # Open the website
-        driver.get("https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/registration")
-        # Wait for the page to load
-        driver.implicitly_wait(3)
-        print("On page")
-
-        browse_classes_button = driver.find_element(By.ID, "classSearch")
-        browse_classes_button.click()
-        print("Clicked class search")
+    if not request.args.get("jsessionid"):
+        # Set up Chrome WebDriver
+        chrome_options = Options()
+        chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
+        chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu") 
+        # chrome_options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")  # Use a unique temp directory
+        # chrome_options.binary_location = "/opt/google/chrome/chrome"  # Use the correct Chrome binary
         
-        driver.implicitly_wait(3)
+        driver = webdriver.Chrome(options=chrome_options)
 
-        # Click the select button
-        class_search_select = driver.find_element(By.ID, "select2-chosen-1")
-        class_search_select.click()
-        print('Clicked selected chosen 1')
-        
-        # Clear if there's anything on there, then type the semester and select the first result
-        search_input = driver.find_element(by=By.ID,value="s2id_autogen1_search")
-        search_input.clear()
-        search_input.send_keys(term_name)
-        search_input.send_keys(Keys.RETURN)
-        driver.implicitly_wait(5)
-        print("Clicked search result")
-        
-        # first_option = driver.find_element(by=By.ID,value="select2-results-1")
-        # first_option.click()
-        # print("first option should be clicked")
-        
-        # time.sleep(10)
-        
-        dropdown = WebDriverWait(driver, 10).until(
-        EC.visibility_of_element_located((By.XPATH, "//ul[@class='select2-results']"))
-)
-        option = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//ul[@class='select2-results']//div"))
-        )
-        option.click()
-        # drop_down=driver.find_element(by=By.ID,value="select2-results-1")
-        # first_option = drop_down.find_element(By.XPATH, ".//li[1]//div/div") 
-        # first_option.click()
-        print("clicked first result 1")
-        driver.implicitly_wait(5)
-        continue_button = driver.find_element(by=By.ID,value="term-go")
-        continue_button.click()
-        
-        print("Clicked go")
-        driver.implicitly_wait(5)
-        cookies = driver.get_cookies()
+        print("Launching selenium...")
+        try:
+            # Open the website
+            driver.get("https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/registration")
+            # Wait for the page to load
+            driver.implicitly_wait(3)
+            print("On page")
 
-        print(cookies)
+            browse_classes_button = driver.find_element(By.ID, "classSearch")
+            browse_classes_button.click()
+            print("Clicked class search")
+            
+            driver.implicitly_wait(3)
 
-    finally:
-        # Close the driver
-        driver.quit()
-    
-    cookie_dict = {cookie["name"]: cookie["value"] for cookie in cookies}
+            # Click the select button
+            class_search_select = driver.find_element(By.ID, "select2-chosen-1")
+            class_search_select.click()
+            print('Clicked selected chosen 1')
+            
+            # Clear if there's anything on there, then type the semester and select the first result
+            search_input = driver.find_element(by=By.ID,value="s2id_autogen1_search")
+            search_input.clear()
+            search_input.send_keys(term_name)
+            search_input.send_keys(Keys.RETURN)
+            driver.implicitly_wait(5)
+            print("Clicked search result")
+            
+            # first_option = driver.find_element(by=By.ID,value="select2-results-1")
+            # first_option.click()
+            # print("first option should be clicked")
+            
+            # time.sleep(10)
+            
+            dropdown = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.XPATH, "//ul[@class='select2-results']"))
+    )
+            option = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//ul[@class='select2-results']//div"))
+            )
+            option.click()
+            # drop_down=driver.find_element(by=By.ID,value="select2-results-1")
+            # first_option = drop_down.find_element(By.XPATH, ".//li[1]//div/div") 
+            # first_option.click()
+            print("clicked first result 1")
+            driver.implicitly_wait(5)
+            continue_button = driver.find_element(by=By.ID,value="term-go")
+            continue_button.click()
+            
+            print("Clicked go")
+            driver.implicitly_wait(5)
+            cookies = driver.get_cookies()
 
-    AWSALB = cookie_dict.get("AWSALB", "")
-    AWSALBCORS = cookie_dict.get("AWSALBCORS", "")
-    JSESSIONID = cookie_dict.get("JSESSIONID", "")
+            print(cookies)
+
+        finally:
+            # Close the driver
+            driver.quit()
+        
+        cookie_dict = {cookie["name"]: cookie["value"] for cookie in cookies}
+
+        AWSALB = cookie_dict.get("AWSALB", "")
+        AWSALBCORS = cookie_dict.get("AWSALBCORS", "")
+        JSESSIONID = cookie_dict.get("JSESSIONID", "")
 
     # Print values
     print("AWSALB:", AWSALB)

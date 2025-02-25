@@ -10,9 +10,18 @@
       </option>
     </select>
     <br />
+
+    <input type="text" placeholder="AWSALB" v-model="awsalb" />
+    <input type="text" placeholder="AWSALBCORS" v-model="awsalbcors" />
+    <input type="text" placeholder="JSESSIONID" v-model="jsessionid" />
+
     <br />
     <button @click="download_course">Download every course</button>
-
+    <a
+      href="https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/classSearch/classSearch"
+      target="_blank"
+      >Get cookies</a
+    >
     <div style="display: flex">
       <div>
         <div v-for="(courses, category) in ordered_courses">
@@ -110,6 +119,9 @@ async function download_course() {
       params: {
         term_name: selected_course.value.name,
         term_code: selected_course.value.code,
+        awsalb: awsalb.value,
+        awsalbcors: awsalbcors.value,
+        jsessionid: jsessionid.value,
       },
     })
 
