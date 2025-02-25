@@ -93,8 +93,9 @@ def fetch_course():
     chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
     chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu") 
     chrome_options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")  # Use a unique temp directory
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Chrome(executable_path="/usr/local/bin/chromedriver", options=chrome_options)
 
     print("Launching selenium...")
     try:
