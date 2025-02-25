@@ -135,6 +135,16 @@ def fetch_course():
             dropdown = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.XPATH, "//ul[contains(@class, 'select2-results')]"))
             )
+            
+            time.sleep(5)
+            
+            results = dropdown.find_elements(By.XPATH, "//li")  # Or adjust XPath based on the actual dropdown items
+            print(f"Number of results in dropdown: {len(results)}")
+            if len(results) > 0:
+                print(f"First result text: {results[0].text}")
+            else:
+                print("No results found")
+
             try:
                 option = WebDriverWait(driver, 10).until(
                     EC.element_to_be_clickable((By.XPATH, "//ul[contains(@class, 'select2-results')]//div"))
@@ -149,15 +159,7 @@ def fetch_course():
                 driver.execute_script("arguments[0].click();", option)
             # option.click()
             
-            
-            results = dropdown.find_elements(By.XPATH, "//li")  # Or adjust XPath based on the actual dropdown items
-            print(f"Number of results in dropdown: {len(results)}")
-            if len(results) > 0:
-                print(f"First result text: {results[0].text}")
-            else:
-                print("No results found")
-
-            option.click()
+            # option.click()
             print("Clicked dropdown option")
             # drop_down=driver.find_element(by=By.ID,value="select2-results-1")
             # first_option = drop_down.find_element(By.XPATH, ".//li[1]//div/div") 
