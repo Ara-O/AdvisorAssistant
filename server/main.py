@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import json
+import tempfile
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -77,6 +78,7 @@ def proxy():
 
 @app.route("/fetch_courses", methods=['GET'])
 def fetch_course():
+    print("Fetching courses....")
     term_code = request.args.get("term_code")
     term_name = request.args.get("term_name")
     
@@ -91,9 +93,10 @@ def fetch_course():
     chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
     chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
     chrome_options.add_argument("--disable-dev-shm-usage")
-    
+    chrome_options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")  # Use a unique temp directory
     driver = webdriver.Chrome(options=chrome_options)
 
+    print("Launching selenium...")
     try:
         # Open the website
         driver.get("https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/registration")
