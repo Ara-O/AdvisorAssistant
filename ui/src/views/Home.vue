@@ -12,11 +12,7 @@
     <br />
     <br />
     <button @click="download_course">Download every course</button>
-    <a
-      href="https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/classSearch/classSearch"
-      target="_blank"
-      >Get cookies</a
-    >
+
     <div style="display: flex">
       <div>
         <div v-for="(courses, category) in ordered_courses">

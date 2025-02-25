@@ -79,6 +79,8 @@ def proxy():
 def fetch_course():
     term_code = request.args.get("term_code")
     term_name = request.args.get("term_name")
+    
+    term_name = term_name.replace(" (View Only)", "")
     page_size = 10
     max_page_size = 500
     
@@ -86,8 +88,10 @@ def fetch_course():
 
     # Set up Chrome WebDriver
     chrome_options = Options()
-    chrome_options.add_experimental_option("detach", False)
-
+    chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
+    chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    
     driver = webdriver.Chrome(options=chrome_options)
 
     try:
