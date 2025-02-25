@@ -2,6 +2,13 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import json
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import time
 
 app = Flask(__name__)
@@ -70,32 +77,78 @@ def proxy():
 
 @app.route("/fetch_courses", methods=['GET'])
 def fetch_course():
-    term = request.args.get("term")
+    term_code = request.args.get("term_code")
+    term_name = request.args.get("term_name")
     page_size = 10
     max_page_size = 500
     
     API_URL = "https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/searchResults/searchResults"
-    # session = requests.Session()
-        
-    # response = session.get("https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/registration")
-        
-    # jsession_id = session.cookies.get("JSESSIONID")
-    # aws_lab = session.cookies.get("AWSALB")
-    # awsalbcors = session.cookies.get("AWSALBCORS")
 
-    # print("JSESSIONID:", jsession_id)
-    # print('AWSLAB: ', aws_lab)
-    # print("CORS:", awsalbcors)
+    # Set up Chrome WebDriver
+    chrome_options = Options()
+    chrome_options.add_experimental_option("detach", False)
+
+    driver = webdriver.Chrome(options=chrome_options)
+
+    try:
+        # Open the website
+        driver.get("https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/registration")
+        # Wait for the page to load
+        driver.implicitly_wait(3)
+
+        browse_classes_button = driver.find_element(By.ID, "classSearch")
+        browse_classes_button.click()
         
+        driver.implicitly_wait(3)
+
+        # Click the select button
+        class_search_select = driver.find_element(By.ID, "select2-chosen-1")
+        class_search_select.click()
+        
+        # Clear if there's anything on there, then type the semester and select the first result
+        search_input = driver.find_element(by=By.ID,value="s2id_autogen1_search")
+        search_input.clear()
+        search_input.send_keys(term_name)
+        search_input.send_keys(Keys.RETURN)
+        driver.implicitly_wait(5)
+        
+        drop_down=driver.find_element(by=By.ID,value="select2-results-1")
+        first_option = drop_down.find_element(By.XPATH, ".//li[1]//div/div") 
+        
+        first_option.click()
+        driver.implicitly_wait(5)
+        continue_button = driver.find_element(by=By.ID,value="term-go")
+        continue_button.click()
+        
+        driver.implicitly_wait(5)
+        cookies = driver.get_cookies()
+
+        print(cookies)
+
+    finally:
+        # Close the driver
+        driver.quit()
+    
+    cookie_dict = {cookie["name"]: cookie["value"] for cookie in cookies}
+
+    AWSALB = cookie_dict.get("AWSALB", "")
+    AWSALBCORS = cookie_dict.get("AWSALBCORS", "")
+    JSESSIONID = cookie_dict.get("JSESSIONID", "")
+
+    # Print values
+    print("AWSALB:", AWSALB)
+    print("AWSALBCORS:", AWSALBCORS)
+    print("JSESSIONID:", JSESSIONID)
+    
     cookies = {
-            "AWSLAB": request.args.get("awslab"),
-            "AWSALBCORS": request.args.get("awsalbcors"),
-            "JSESSIONID":  request.args.get("jsessionid"),
+            "AWSALB":  AWSALB,
+            "AWSALBCORS": AWSALBCORS,
+            "JSESSIONID":  JSESSIONID,
             # "taxitag_main": "v_id:0193db54b63500803a61c3340d7805046005b00900bd0$_sn:26$_se:3$_ss:0$_st:1740268426041$dc_visit:26$ses_id:1740266596186%3Bexp-session$_pn:3%3Bexp-session$dc_event:3%3Bexp-session$tag_session_91:1%3Bexp-session"
     }
     
     params = {
-        "txt_term": str(term),
+        "txt_term": str(term_code),
         "startDatepicker": "",
         "endDatepicker": "",
         "uniqueSessionId": "gro1j1740356345340",  # Generate a new session ID
@@ -149,5 +202,5 @@ def fetch_course():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000, debug=True)  
+    app.run(host='0.0.0.0', port=5000, debug=True)  
 

@@ -2,16 +2,14 @@
   <main>
     <h3>Fetch all Courses</h3>
     <select name="" id="" v-model="selected_course">
-      <option :value="course.code" v-for="(course, idx) in course_mappings">
+      <option
+        :value="{ code: course.code, name: course.description }"
+        v-for="(course, idx) in course_mappings"
+      >
         {{ course.description }}
       </option>
     </select>
     <br />
-
-    <input type="text" placeholder="AWSALB" v-model="awsalb" />
-    <input type="text" placeholder="AWSALBCORS" v-model="awsalbcors" />
-    <input type="text" placeholder="JSESSIONID" v-model="jsessionid" />
-
     <br />
     <button @click="download_course">Download every course</button>
     <a
@@ -102,7 +100,7 @@ function onEventClick(event: any) {
 }
 
 const course_mappings = ref<Course[]>([])
-const selected_course = ref<Course>()
+const selected_course = ref<any>()
 const ordered_courses = ref<any>({})
 const chosen_courses = ref<any>([])
 const jsessionid = ref('')
@@ -114,10 +112,8 @@ async function download_course() {
   try {
     let res = await axios.get(`${import.meta.env.VITE_API_URL}/fetch_courses`, {
       params: {
-        term: selected_course.value,
-        awsalb: awsalb.value,
-        awsalbcors: awsalbcors.value,
-        jsessionid: jsessionid.value,
+        term_name: selected_course.value.name,
+        term_code: selected_course.value.code,
       },
     })
 
