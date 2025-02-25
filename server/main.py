@@ -93,14 +93,16 @@ def fetch_course():
     if not request.args.get("jsessionid"):
         # Set up Chrome WebDriver
         chrome_options = Options()
-        # chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
+        chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
         chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
         chrome_options.add_argument("--disable-dev-shm-usage")
-        # chrome_options.add_argument("--disable-gpu") 
-        chrome_options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")
+        chrome_options.add_argument("--disable-gpu") 
+        chrome_options.add_argument("--enable-logging")
+        # chrome_options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")
         driver = webdriver.Chrome(options=chrome_options)
 
         print("Launching selenium...")
+        print(chrome_options.arguments)
         try:
             # Open the website
             driver.get("https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/registration")
