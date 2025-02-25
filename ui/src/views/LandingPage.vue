@@ -18,13 +18,13 @@
       </div>
       <div class="mt-6">
         <p class="text-lg">
-          <span class="font-semibold">Course Viewer & Calendar </span>: Easily browse courses, track
-          deadlines, and stay organized.
+          <span class="font-semibold">Advisor Assistant </span>: Upload your degree evaluation and
+          get a personalized schedule
         </p>
         <button
           class="font-text mt-3 bg-udmercy-blue text-white font-semibold px-5 py-3 text-sm rounded-sm"
         >
-          Course Viewer
+          Advisor Assistant
         </button>
       </div>
     </section>

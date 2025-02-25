@@ -12,6 +12,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import time
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException, NoSuchWindowException
 from selenium.webdriver.support import expected_conditions as EC
 
 app = Flask(__name__)
@@ -134,9 +135,18 @@ def fetch_course():
             dropdown = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.XPATH, "//ul[contains(@class, 'select2-results')]"))
             )
-            option = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//ul[contains(@class, 'select2-results')]//div"))
-            )
+            try:
+                option = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, "//ul[contains(@class, 'select2-results')]//div"))
+                )
+                option.click()
+            except StaleElementReferenceException:
+                # Re-find the element if it went stale
+                option = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, "//ul[contains(@class, 'select2-results')]//div"))
+                )
+                # option.click()
+                driver.execute_script("arguments[0].click();", option)
             # option.click()
             
             
