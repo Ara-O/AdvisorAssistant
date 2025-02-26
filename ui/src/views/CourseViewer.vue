@@ -48,7 +48,10 @@
         id="JSESSIONID"
         v-model="jsessionid"
       />
-
+      <span class="flex mt-3 gap-3">
+        <input type="checkbox" id="use_cache" v-model="use_cache" />
+        <label for="use_cache">Use Cache</label>
+      </span>
       <button
         @click="findCourses"
         class="bg-udmercy-blue cursor-pointer font-semibold text-sm px-6 py-3 rounded-md mt-7 font-text text-white"
@@ -166,6 +169,7 @@ const chosen_courses = ref<any>([])
 const jsessionid = ref('')
 const awsalb = ref('')
 const awsalbcors = ref('')
+const use_cache = ref<boolean>(true)
 
 function onEventClick(event: any) {
   // console.log(event)
@@ -215,6 +219,7 @@ async function findCourses() {
         awsalb: awsalb.value,
         awsalbcors: awsalbcors.value,
         jsessionid: jsessionid.value,
+        use_cache: use_cache.value,
       },
     })
 

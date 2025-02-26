@@ -6,3 +6,9 @@ waitress==3.0.2
 gunicorn==23.0.0
 beautifulsoup4==4.12.3
 selenium==4.28.1
+camelot-py==1.0.0
+langchain==0.3.19
+langchain-core==0.3.40
+langchain-ollama==0.2.3
+langchain-text-splitters==0.3.6
+langsmith==0.3.11

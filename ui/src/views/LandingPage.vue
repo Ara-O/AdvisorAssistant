@@ -10,7 +10,7 @@
           deadlines, and stay organized.
         </p>
         <button
-          class="font-text cursor-pointer mt-3 bg-udmercy-blue text-white font-semibold px-5 py-3 text-sm rounded-sm"
+          class="font-text cursor-pointer mt-3 w-40 bg-udmercy-blue text-white font-semibold px-5 py-3 text-sm rounded-sm"
           @click="goToCourseViewer"
         >
           Course Viewer
@@ -22,7 +22,7 @@
           get a personalized schedule
         </p>
         <button
-          class="font-text mt-3 bg-udmercy-blue text-white font-semibold px-5 py-3 text-sm rounded-sm"
+          class="font-text mt-3 w-40 bg-udmercy-blue text-white font-semibold px-5 py-3 text-sm rounded-sm"
         >
           Advisor Assistant
         </button>

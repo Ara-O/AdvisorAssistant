@@ -79,108 +79,108 @@ def proxy():
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
+def fetch_cookies(term_name):
+    chrome_options = Options()
+    chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
+    chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu") 
+    chrome_options.add_argument("--enable-logging")
+    driver = webdriver.Chrome(options=chrome_options)
+
+    print("Launching selenium...")
+    
+    try:
+        # Open the website
+        driver.get("https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/registration")
+        
+        # Wait for the page to load
+        driver.implicitly_wait(3)
+
+        browse_classes_button = driver.find_element(By.ID, "classSearch")
+        browse_classes_button.click()            
+        driver.implicitly_wait(3)
+
+        # Click the select button
+        class_search_select = driver.find_element(By.ID, "select2-chosen-1")
+        class_search_select.click()
+            
+        # Clear if there's anything on there, then type the semester and select the first result
+        search_input = driver.find_element(by=By.ID,value="s2id_autogen1_search")
+        search_input.clear()
+        search_input.send_keys(term_name)
+        search_input.send_keys(Keys.RETURN)
+   
+        dropdown = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.XPATH, "//ul[contains(@class, 'select2-results')]"))
+        )
+            
+        time.sleep(5)
+            
+        results = dropdown.find_elements(By.XPATH, "//li")  # Or adjust XPath based on the actual dropdown items
+
+        if len(results) > 0:
+            print(f"First result text: {results[0].text}")
+        else:
+            print("No results found")
+
+        try:
+            option = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//ul[contains(@class, 'select2-results')]//div"))
+            )
+            option.click()
+            
+        except StaleElementReferenceException:
+            # Re-find the element if it went stale
+            option = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//ul[contains(@class, 'select2-results')]//div"))
+            )
+ 
+            driver.execute_script("arguments[0].click();", option)
+
+        driver.implicitly_wait(5)
+            
+        continue_button = driver.find_element(by=By.ID,value="term-go")
+        continue_button.click()
+            
+        driver.implicitly_wait(5)
+        cookies = driver.get_cookies()
+
+        return cookies
+    finally:
+        # Close the driver
+        driver.quit()
+        
+    
 @app.route("/fetch_courses", methods=['GET'])
 def fetch_course():
     print("Fetching courses....")
     term_code = request.args.get("term_code")
     term_name = request.args.get("term_name")
+    use_cache = request.args.get("use_cache")
     
     term_name = term_name.replace(" (View Only)", "")
-    page_size = 10
     max_page_size = 500
     
     API_URL = "https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/searchResults/searchResults"
-
-    if not request.args.get("jsessionid"):
-        # Set up Chrome WebDriver
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
-        chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-gpu") 
-        chrome_options.add_argument("--enable-logging")
-        # chrome_options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")
-        driver = webdriver.Chrome(options=chrome_options)
-
-        print("Launching selenium...")
-        print(chrome_options.arguments)
+    
+    term_title = term_name.split(" ")
+    term_json_file = "".join(term_title).lower() + ".json"
+    
+    if use_cache:
         try:
-            # Open the website
-            driver.get("https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/registration")
-            # Wait for the page to load
-            driver.implicitly_wait(3)
-            print("On page")
+            with open(term_json_file, "r") as file:
+                data = json.load(file)
+                results = formatResults(data)
+                return results, 200
 
-            browse_classes_button = driver.find_element(By.ID, "classSearch")
-            browse_classes_button.click()
-            print("Clicked class search")
-            
-            driver.implicitly_wait(3)
-
-            # Click the select button
-            class_search_select = driver.find_element(By.ID, "select2-chosen-1")
-            class_search_select.click()
-            print('Clicked selected chosen 1')
-            
-            # Clear if there's anything on there, then type the semester and select the first result
-            search_input = driver.find_element(by=By.ID,value="s2id_autogen1_search")
-            search_input.clear()
-            search_input.send_keys(term_name)
-            search_input.send_keys(Keys.RETURN)
-         
-            print(f"Input field value: {search_input.get_attribute('value')}")
-            print("Clicked search result")
-            
-     
-            dropdown = WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.XPATH, "//ul[contains(@class, 'select2-results')]"))
-            )
-            
-            time.sleep(5)
-            
-            results = dropdown.find_elements(By.XPATH, "//li")  # Or adjust XPath based on the actual dropdown items
-            print(f"Number of results in dropdown: {len(results)}")
-            if len(results) > 0:
-                print(f"First result text: {results[0].text}")
-            else:
-                print("No results found")
-
-            try:
-                option = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, "//ul[contains(@class, 'select2-results')]//div"))
-                )
-                option.click()
-            except StaleElementReferenceException:
-                # Re-find the element if it went stale
-                option = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, "//ul[contains(@class, 'select2-results')]//div"))
-                )
-                # option.click()
-                driver.execute_script("arguments[0].click();", option)
-            # option.click()
-            
-            # option.click()
-            print("Clicked dropdown option")
-            # drop_down=driver.find_element(by=By.ID,value="select2-results-1")
-            # first_option = drop_down.find_element(By.XPATH, ".//li[1]//div/div") 
-            # first_option.click()
-            print("clicked first result 1")
-            driver.implicitly_wait(5)
-            continue_button = driver.find_element(by=By.ID,value="term-go")
-            continue_button.click()
-            
-            print("Clicked go")
-            driver.implicitly_wait(5)
-            cookies = driver.get_cookies()
-
-            print(cookies)
-
-        finally:
-            # Close the driver
-            driver.quit()
-        
+        except FileNotFoundError:
+            print('File not found, SO NO CACHE EXISTS YET ')
+    
+    # 
+    if not request.args.get("jsessionid"):
+        cookies = fetch_cookies(term_name=term_name)
         cookie_dict = {cookie["name"]: cookie["value"] for cookie in cookies}
-
         AWSALB = cookie_dict.get("AWSALB", "")
         AWSALBCORS = cookie_dict.get("AWSALBCORS", "")
         JSESSIONID = cookie_dict.get("JSESSIONID", "")
@@ -188,23 +188,19 @@ def fetch_course():
         JSESSIONID = request.args.get("jsessionid")
         AWSALB = request.args.get("awsalb")
         AWSALBCORS = request.args.get("awsalbcors")
-    # Print values
-    print("AWSALB:", AWSALB)
-    print("AWSALBCORS:", AWSALBCORS)
-    print("JSESSIONID:", JSESSIONID)
     
+
     cookies = {
             "AWSALB":  AWSALB,
             "AWSALBCORS": AWSALBCORS,
             "JSESSIONID":  JSESSIONID,
-            # "taxitag_main": "v_id:0193db54b63500803a61c3340d7805046005b00900bd0$_sn:26$_se:3$_ss:0$_st:1740268426041$dc_visit:26$ses_id:1740266596186%3Bexp-session$_pn:3%3Bexp-session$dc_event:3%3Bexp-session$tag_session_91:1%3Bexp-session"
     }
     
     params = {
         "txt_term": str(term_code),
         "startDatepicker": "",
         "endDatepicker": "",
-        "uniqueSessionId": "gro1j1740356345340",  # Generate a new session ID
+        "uniqueSessionId": "gro1j1740356345340",
         "sortColumn": "subjectDescription",
         "sortDirection": "asc",
         "enrollmentDisplaySettings": ""
@@ -238,15 +234,13 @@ def fetch_course():
             
             all_results.extend(response_json["data"])
             
-        print("ALl results", len(all_results))
+        print("All results: ", len(all_results))
         
-        with open("course_data.json", "w", encoding="utf-8") as f:
+        with open(term_json_file, "w", encoding="utf-8") as f:
             json.dump(all_results, f, indent=4)
         
-    
-        print(type(all_results))
         results = formatResults(all_results)
-        # Return the API response as JSON
+
         return results, response.status_code
 
     except requests.exceptions.RequestException as e:
