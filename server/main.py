@@ -167,7 +167,8 @@ def fetch_course():
     term_title = term_name.split(" ")
     term_json_file = "".join(term_title).lower() + ".json"
     
-    if use_cache:
+    print(f"Using Cache: {use_cache}")
+    if json.loads(use_cache):
         try:
             with open(term_json_file, "r") as file:
                 data = json.load(file)
