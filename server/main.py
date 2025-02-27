@@ -30,7 +30,7 @@ def formatResults(courses):
         course_dict["subject"] = course["subject"]
         course_dict["course_number"] = course["courseNumber"]
         course_dict["course_description"] = course["subjectDescription"]
-
+        course_dict["attributes"] = course["sectionAttributes"]
         meetings = course["meetingsFaculty"]
 
         # TODO: Some have multiple of this for multiple meeting times

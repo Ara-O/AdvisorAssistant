@@ -22,7 +22,7 @@
 
       <!-- Cookies section -->
 
-      <label for="AWSALB" class="mt-5 mb-2">AWSALB Cookie</label>
+      <!-- <label for="AWSALB" class="mt-5 mb-2">AWSALB Cookie</label>
       <input
         type="text"
         id="AWSALB"
@@ -47,7 +47,7 @@
         class="border font-text text-center rounded-sm h-10 w-64 border-gray-400"
         id="JSESSIONID"
         v-model="jsessionid"
-      />
+      /> -->
       <span class="flex mt-3 gap-3">
         <input type="checkbox" id="use_cache" v-model="use_cache" />
         <label for="use_cache">Use Cache</label>
@@ -68,10 +68,30 @@
       <div class="flex gap-10 flex-row">
         <div class="w-[400px]">
           <h2 class="text-xl font-text font-bold mb-1">All Courses</h2>
+          <div class="mt-3 mb-3">
+            <label for="name_search" class="block font-semibold">Search by Name</label>
+            <input
+              type="text"
+              id="name_search"
+              v-model="search_by_name_field"
+              class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
+              placeholder="Search Course By Name"
+            />
+          </div>
+          <div class="mt-3 mb-3">
+            <label for="name_search" class="block font-semibold">Search by Attribute</label>
+            <input
+              type="text"
+              id="name_search"
+              v-model="search_by_attribute_field"
+              class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
+              placeholder="Search By Attribute"
+            />
+          </div>
           <div class="max-h-[600px] box-border overflow-auto">
-            <div v-for="(courses, category) in ordered_courses" class="my-2">
-              <details>
-                <summary class="font-text">{{ category }}</summary>
+            <div v-for="(courses, category) in filtered_course_list" class="my-2">
+              <details v-if="courses.length !== 0">
+                <summary class="font-text" v-html="category"></summary>
                 <div
                   v-for="course in courses"
                   @click="() => addCourse(course)"
@@ -95,6 +115,9 @@
                     }}. Days: {{ formatCourseDays(course) }}
                   </p>
                   <p v-else>This course does not have a set meeting time</p>
+                  <p v-if="course.attributes && course.attributes.length > 0">
+                    Attributes: {{ formatCourseAttributes(course) }}
+                  </p>
                 </div>
               </details>
             </div>
@@ -147,7 +170,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
 // @ts-expect-error
 import VueCal from 'vue-cal'
@@ -164,16 +187,64 @@ const courses_are_being_fetched = ref<boolean>(false)
 const showDialog = false
 const selectedEvent = {} as any
 const events = ref<any>([])
-const ordered_courses = ref<any>({})
+const ordered_course_list = ref<any>({})
 const chosen_courses = ref<any>([])
 const jsessionid = ref('')
 const awsalb = ref('')
 const awsalbcors = ref('')
 const use_cache = ref<boolean>(true)
+const search_by_name_field = ref<string>('')
+const search_by_attribute_field = ref<string>('')
 
 function onEventClick(event: any) {
   // console.log(event)
   // Prevent navigating to narrower view (default vue-cal behavior).
+}
+
+const filtered_course_list = computed(() => {
+  // search_by_name_field.value
+  if (search_by_name_field.value.trim() !== '') {
+    const filtered_courses: any = {}
+    for (let key in ordered_course_list.value) {
+      const course_list = ordered_course_list.value[key]
+      filtered_courses[key] = course_list.filter((course: any) =>
+        course.course_name.toLowerCase().includes(search_by_name_field.value.toLowerCase()),
+      )
+    }
+    return filtered_courses
+  }
+
+  if (search_by_attribute_field.value.trim() !== '') {
+    const filtered_courses: any = {}
+    for (let key in ordered_course_list.value) {
+      filtered_courses[key] = []
+
+      const course_list = ordered_course_list.value[key]
+      course_list.forEach((course: any) => {
+        // Go through all the attributes and check which matches with the search field
+        if (
+          course.attributes.filter((attribute: any) =>
+            attribute.code.toLowerCase().includes(search_by_attribute_field.value.toLowerCase()),
+          ).length > 0
+        ) {
+          filtered_courses[key].push(course)
+        }
+      })
+    }
+
+    return filtered_courses
+  }
+
+  return ordered_course_list.value
+})
+
+function formatCourseAttributes(course: any) {
+  const attrs: any = []
+  course.attributes.forEach((attr: any) => {
+    attrs.push(attr.code)
+  })
+
+  return attrs.join(' | ')
 }
 
 function formatCourseDays(course: any) {
@@ -228,10 +299,10 @@ async function findCourses() {
 
     courses.forEach((course: any) => {
       course_categories.add(course.course_description)
-      if (!ordered_courses.value[course.course_description]) {
-        ordered_courses.value[course.course_description] = [course]
+      if (!ordered_course_list.value[course.course_description]) {
+        ordered_course_list.value[course.course_description] = [course]
       } else {
-        ordered_courses.value[course.course_description].push(course)
+        ordered_course_list.value[course.course_description].push(course)
       }
     })
 
