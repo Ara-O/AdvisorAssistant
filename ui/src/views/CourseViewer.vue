@@ -68,25 +68,54 @@
       <div class="flex gap-10 flex-row">
         <div class="w-[400px]">
           <h2 class="text-xl font-text font-bold mb-1">All Courses</h2>
-          <div class="mt-3 mb-3">
-            <label for="name_search" class="block font-semibold">Search by Name</label>
-            <input
-              type="text"
-              id="name_search"
-              v-model="search_by_name_field"
-              class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
-              placeholder="Search Course By Name"
-            />
+          <div class="flex gap-4">
+            <div class="mt-3 mb-3">
+              <label for="name_search" class="block font-semibold">Search by Name</label>
+              <input
+                type="text"
+                id="name_search"
+                v-model="search_by_name_field"
+                class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
+                placeholder="Search By Name"
+              />
+            </div>
+            <div class="mt-3 mb-3">
+              <label for="name_search" class="block font-semibold">Search by Type</label>
+              <select
+                type="text"
+                id="name_search"
+                v-model="search_by_course_type"
+                class="border border-solid mt-2 px-3 w-36 font-text text-sm py-2 border-gray-300 rounded-sm"
+                placeholder="Search By Name"
+              >
+                <option :value="null">All Types</option>
+                <option :value="acronym" v-for="(full_title, acronym) in course_types">
+                  {{ acronym }}: {{ full_title }}
+                </option>
+              </select>
+            </div>
           </div>
-          <div class="mt-3 mb-3">
-            <label for="name_search" class="block font-semibold">Search by Attribute</label>
-            <input
-              type="text"
-              id="name_search"
-              v-model="search_by_attribute_field"
-              class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
-              placeholder="Search By Attribute"
-            />
+          <div class="mt-3 mb-3 gap-3 flex">
+            <span>
+              <label for="name_search" class="block font-semibold">Attribute</label>
+              <input
+                type="text"
+                id="name_search"
+                v-model="search_by_attribute_field"
+                class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
+                placeholder="Search By Attribute"
+              />
+            </span>
+            <span>
+              <label for="course_no_search" class="block font-semibold">Course Number</label>
+              <input
+                type="text"
+                id="course_no_search"
+                v-model="search_by_course_no_field"
+                class="border border-solid mt-2 px-3 w-36 font-text text-sm py-2 border-gray-300 rounded-sm"
+                placeholder="Search By No."
+              />
+            </span>
           </div>
           <div class="max-h-[600px] box-border overflow-auto">
             <div v-for="(courses, category) in filtered_course_list" class="my-2">
@@ -95,7 +124,7 @@
                 <div
                   v-for="course in courses"
                   @click="() => addCourse(course)"
-                  :style="{ 'border-color': course.is_selected ? 'darkblue' : '' }"
+                  :class="{ 'selected-course': course.is_selected }"
                   class="border box-border px-3 pb-5 pt-4 my-2 rounded-md border-gray-300"
                 >
                   <p class="font-medium overflow-ellipsis w-80">{{ course.course_name }}</p>
@@ -134,7 +163,7 @@
         <vue-cal
           :events="events"
           selected-date="2025-05-05"
-          :time-from="9 * 60"
+          :time-from="8 * 60"
           hide-view-selector
           hide-title-bar
           :time-to="23 * 60"
@@ -190,11 +219,14 @@ const events = ref<any>([])
 const ordered_course_list = ref<any>({})
 const chosen_courses = ref<any>([])
 const jsessionid = ref('')
+const course_types = ref<any>([])
 const awsalb = ref('')
 const awsalbcors = ref('')
 const use_cache = ref<boolean>(true)
 const search_by_name_field = ref<string>('')
 const search_by_attribute_field = ref<string>('')
+const search_by_course_no_field = ref<string>('')
+const search_by_course_type = ref<string | null>(null)
 
 function onEventClick(event: any) {
   // console.log(event)
@@ -202,40 +234,48 @@ function onEventClick(event: any) {
 }
 
 const filtered_course_list = computed(() => {
-  // search_by_name_field.value
+  let filtered_courses = { ...ordered_course_list.value }
+
+  // Filter by course name
   if (search_by_name_field.value.trim() !== '') {
-    const filtered_courses: any = {}
-    for (let key in ordered_course_list.value) {
-      const course_list = ordered_course_list.value[key]
-      filtered_courses[key] = course_list.filter((course: any) =>
+    for (let key in filtered_courses) {
+      filtered_courses[key] = filtered_courses[key].filter((course: any) =>
         course.course_name.toLowerCase().includes(search_by_name_field.value.toLowerCase()),
       )
     }
-    return filtered_courses
   }
 
+  // Filter by attribute
   if (search_by_attribute_field.value.trim() !== '') {
-    const filtered_courses: any = {}
-    for (let key in ordered_course_list.value) {
-      filtered_courses[key] = []
-
-      const course_list = ordered_course_list.value[key]
-      course_list.forEach((course: any) => {
-        // Go through all the attributes and check which matches with the search field
-        if (
-          course.attributes.filter((attribute: any) =>
-            attribute.code.toLowerCase().includes(search_by_attribute_field.value.toLowerCase()),
-          ).length > 0
-        ) {
-          filtered_courses[key].push(course)
-        }
-      })
+    for (let key in filtered_courses) {
+      filtered_courses[key] = filtered_courses[key].filter((course: any) =>
+        course.attributes.some((attribute: any) =>
+          attribute.code.toLowerCase().includes(search_by_attribute_field.value.toLowerCase()),
+        ),
+      )
     }
-
-    return filtered_courses
   }
 
-  return ordered_course_list.value
+  // Filter by course number
+  if (search_by_course_no_field.value.trim() !== '') {
+    for (let key in filtered_courses) {
+      filtered_courses[key] = filtered_courses[key].filter((course: any) =>
+        course.course_number.toLowerCase().includes(search_by_course_no_field.value.toLowerCase()),
+      )
+    }
+  }
+
+  // Filter by course type
+  if (search_by_course_type.value && search_by_course_type.value.trim() !== '') {
+    for (let key in filtered_courses) {
+      filtered_courses[key] = filtered_courses[key].filter((course: any) =>
+        // @ts-ignore
+        course.subject.toLowerCase().includes(search_by_course_type.value.toLowerCase()),
+      )
+    }
+  }
+
+  return filtered_courses
 })
 
 function formatCourseAttributes(course: any) {
@@ -295,16 +335,21 @@ async function findCourses() {
     })
 
     const courses = res.data
-    const course_categories = new Set()
+    const course_categories: any = {}
 
     courses.forEach((course: any) => {
-      course_categories.add(course.course_description)
+      if (!course_categories[course.subject]) {
+        course_categories[course.subject] = course.course_description
+      }
+
       if (!ordered_course_list.value[course.course_description]) {
         ordered_course_list.value[course.course_description] = [course]
       } else {
         ordered_course_list.value[course.course_description].push(course)
       }
     })
+
+    course_types.value = course_categories
 
     // After fetching the course
     courses_are_being_fetched.value = false
@@ -425,4 +470,15 @@ onMounted(async () => {
 .vuecal {
   font-family: 'Raleway' !important;
 }
+
+.selected-course {
+  background-color: #093575;
+  border: solid 1px #093575;
+  color: white;
+}
+
+.vuecal__flex.weekday-label span:last-of-type {
+  display: none;
+}
 </style>
+<!-- convert json to sql -->

@@ -1,3 +1,5 @@
 *.json
 course_data.json
 *.pdf
+*.env
+*.db
