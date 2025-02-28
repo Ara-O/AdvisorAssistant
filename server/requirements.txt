@@ -12,3 +12,4 @@ langchain-core==0.3.40
 langchain-ollama==0.2.3
 langchain-text-splitters==0.3.6
 langsmith==0.3.11
+python-dotenv==1.0.1

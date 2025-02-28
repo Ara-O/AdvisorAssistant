@@ -61,12 +61,10 @@
       <p class="mt-5" v-if="courses_are_being_fetched">Fetching courses, please wait...</p>
     </section>
 
-    <!-- COURSES TREE 
- 
-    -->
+    <!-- COURSES TREE -->
     <section class="px-8 py-5" v-else>
       <div class="flex gap-10 flex-row">
-        <div class="w-[400px]">
+        <div class="max-w-[400px] w-full min-w-[300px]">
           <h2 class="text-xl font-text font-bold mb-1">All Courses</h2>
           <div class="flex gap-4">
             <div class="mt-3 mb-3">
@@ -117,7 +115,7 @@
               />
             </span>
           </div>
-          <div class="max-h-[600px] box-border overflow-auto">
+          <div class="max-h-[600px] h-auto box-border overflow-auto">
             <div v-for="(courses, category) in filtered_course_list" class="my-2">
               <details v-if="courses.length !== 0">
                 <summary class="font-text" v-html="category"></summary>
@@ -127,7 +125,7 @@
                   :class="{ 'selected-course': course.is_selected }"
                   class="border box-border px-3 pb-5 pt-4 my-2 rounded-md border-gray-300"
                 >
-                  <p class="font-medium overflow-ellipsis w-80">{{ course.course_name }}</p>
+                  <p class="font-medium overflow-ellipsis w-80" v-html="course.course_name"></p>
                   <p class="text-[15px]">
                     Course Number: {{ course.course_number }} | Section {{ course.section }}
                   </p>
@@ -141,68 +139,94 @@
                     -
                     {{
                       course.meeting_end_time.slice(0, 2) + ':' + course.meeting_end_time.slice(2)
-                    }}. Days: {{ formatCourseDays(course) }}
+                    }}. Days: {{ formatCourseDays(course) }}.
                   </p>
                   <p v-else>This course does not have a set meeting time</p>
                   <p v-if="course.attributes && course.attributes.length > 0">
                     Attributes: {{ formatCourseAttributes(course) }}
                   </p>
+                  <p v-if="course.credits">Credits: {{ course.credits }}</p>
                 </div>
               </details>
             </div>
           </div>
           <h2 class="text-xl font-text font-bold mt-5">Selected Courses</h2>
+          <p class="my-3" v-if="chosen_courses.length !== 0">
+            Total Credits: {{ totalCreditsSelected }}
+          </p>
           <p v-if="chosen_courses.length == 0" class="mt-3">No courses have been selected yet</p>
           <div v-else>
             <div v-for="course in chosen_courses">
-              <p class="mt-2">{{ course.course_name }}</p>
+              <div class="flex mt-2 items-center gap-4">
+                <img
+                  :src="CancelIcon"
+                  class="w-3 cursor-pointer"
+                  @click="() => removeCourse(course)"
+                  alt="Cancel Icon"
+                />
+                <p>{{ course.course_name }} ({{ course.credits ?? 'No' }} credits)</p>
+              </div>
             </div>
           </div>
         </div>
-        <!-- TODO: change selected date to current date -->
-        <vue-cal
-          :events="events"
-          selected-date="2025-05-05"
-          :time-from="8 * 60"
-          hide-view-selector
-          hide-title-bar
-          :time-to="23 * 60"
-          :disable-views="['years', 'year', 'month']"
-          :on-event-click="onEventClick"
-        >
-        </vue-cal>
+        <div class="w-full">
+          <vue-cal
+            :events="events"
+            selected-date="2025-05-05"
+            :time-from="8 * 60"
+            hide-view-selector
+            :time-cell-height="60"
+            hide-title-bar
+            :time-to="23 * 60"
+            :disable-views="['years', 'year', 'month']"
+            :on-event-click="onEventClick"
+          >
+          </vue-cal>
+        </div>
       </div>
-
-      <!-- Using Vuetify (but we prefer Wave UI 🤘) -->
-      <!-- <v-dialog v-model="showDialog">
-        <v-card>
-          <v-card-title>
-            <v-icon>{{ selectedEvent.icon }}</v-icon>
-            <span>{{ selectedEvent.title }}</span>
-            <v-spacer />
-            <strong>{{ selectedEvent.start && selectedEvent.start.format('DD/MM/YYYY') }}</strong>
-          </v-card-title>
-          <v-card-text>
-            <p v-html="selectedEvent.contentFull" />
-            <strong>Event details:</strong>
-            <ul>
-              <li>
-                Event starts at: {{ selectedEvent.start && selectedEvent.start.formatTime() }}
-              </li>
-              <li>Event ends at: {{ selectedEvent.end && selectedEvent.end.formatTime() }}</li>
-            </ul>
-          </v-card-text>
-        </v-card>
-      </v-dialog> -->
     </section>
+    <div class="absolute bottom-5 right-3">
+      <button
+        @click="feedback_popup_is_visible = true"
+        class="bg-udmercy-blue text-white font-text shadow-md font-medium px-5 text-sm py-3 rounded-full cursor-pointer"
+      >
+        Feedback/Comments
+      </button>
+    </div>
+
+    <Dialog
+      v-model:visible="feedback_popup_is_visible"
+      modal
+      header="Feedback/Comments"
+      :style="{ width: '25rem', 'font-family': 'Raleway' }"
+    >
+      <span class="text-surface-500 font-medium dark:text-surface-400 block mb-8"
+        >Provide feedback, comments, or bugs!</span
+      >
+      <textarea
+        name="feedback"
+        placeholder="Enter Feedback"
+        v-model="feedback_message"
+        class="border border-gray-300 mt-[-10px] box-border p-3 rounded-md block w-full h-40"
+        id="text-area"
+      ></textarea>
+      <button
+        @click="sendFeedback"
+        class="bg-udmercy-blue mt-6 text-white font-text shadow-md font-medium px-5 text-sm py-3 rounded-full cursor-pointer"
+      >
+        Send Feedback
+      </button>
+    </Dialog>
   </main>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
-import axios from 'axios'
 // @ts-expect-error
 import VueCal from 'vue-cal'
+import CancelIcon from '../assets/cancel-icon.png'
+import axios from 'axios'
+import Dialog from 'primevue/dialog'
+import { computed, onMounted, ref } from 'vue'
 
 type Term = {
   code: string
@@ -215,6 +239,7 @@ const courses_have_been_fetched = ref<boolean>(false)
 const courses_are_being_fetched = ref<boolean>(false)
 const showDialog = false
 const selectedEvent = {} as any
+const feedback_message = ref<string>('')
 const events = ref<any>([])
 const ordered_course_list = ref<any>({})
 const chosen_courses = ref<any>([])
@@ -227,10 +252,10 @@ const search_by_name_field = ref<string>('')
 const search_by_attribute_field = ref<string>('')
 const search_by_course_no_field = ref<string>('')
 const search_by_course_type = ref<string | null>(null)
+const feedback_popup_is_visible = ref<boolean>(false)
 
 function onEventClick(event: any) {
   // console.log(event)
-  // Prevent navigating to narrower view (default vue-cal behavior).
 }
 
 const filtered_course_list = computed(() => {
@@ -281,10 +306,20 @@ const filtered_course_list = computed(() => {
 function formatCourseAttributes(course: any) {
   const attrs: any = []
   course.attributes.forEach((attr: any) => {
-    attrs.push(attr.code)
+    attrs.push(attr.code.replace('KA', ''))
   })
 
   return attrs.join(' | ')
+}
+
+function removeCourse(course: any) {
+  // Deselect the course and remove it from the chosen courses list if it
+  course.is_selected = false
+  // @ts-ignore
+  chosen_courses.value = chosen_courses.value.filter(
+    (coursed: any) => coursed.course_id !== course.course_id,
+  )
+  events.value = events.value.filter((classs: any) => classs.course_id !== course.course_id)
 }
 
 function formatCourseDays(course: any) {
@@ -368,9 +403,6 @@ function addCourse(course: any) {
     chosen_courses.value = chosen_courses.value.filter(
       (coursed: any) => coursed.course_id !== course.course_id,
     )
-
-    // console.log(events.value)
-    // console.log(course.course_id)
     events.value = events.value.filter((classs: any) => classs.course_id !== course.course_id)
     return
   }
@@ -383,50 +415,74 @@ function addCourse(course: any) {
   let startdate = course.end_date.split('/')
   let formattedStartDate = startdate[2] + '-' + startdate[1] + '-' + startdate[0]
 
-  let beginTimeC = course.meeting_begin_time
-  let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
+  if (course.meeting_begin_time) {
+    let beginTimeC = course.meeting_begin_time
+    let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
 
-  let endTimeC = course.meeting_end_time
-  let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
+    let endTimeC = course.meeting_end_time
+    let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
 
-  let days = []
+    let days = []
 
-  if (course.monday) {
-    days.push('05')
-  }
-  if (course.tuesday) {
-    days.push('06')
-  }
-  if (course.wednesday) {
-    days.push('07')
-  }
-  if (course.thursday) {
-    days.push('08')
-  }
-  if (course.friday) {
-    days.push('09')
-  }
-  if (course.saturday) {
-    days.push('10')
-  }
-  if (course.sunday) {
-    days.push('11')
-  }
+    if (course.monday) {
+      days.push('05')
+    }
+    if (course.tuesday) {
+      days.push('06')
+    }
+    if (course.wednesday) {
+      days.push('07')
+    }
+    if (course.thursday) {
+      days.push('08')
+    }
+    if (course.friday) {
+      days.push('09')
+    }
+    if (course.saturday) {
+      days.push('10')
+    }
+    if (course.sunday) {
+      days.push('11')
+    }
 
-  days.forEach((day) => {
-    // TODO: Change this to Current day
-    let starttime = '2025-05-' + day + ' ' + begintime
-    let endtimes = '2025-05-' + day + ' ' + endtime
+    days.forEach((day) => {
+      let starttime = '2025-05-' + day + ' ' + begintime
+      let endtimes = '2025-05-' + day + ' ' + endtime
 
-    events.value.push({
-      start: starttime,
-      end: endtimes,
-      title: course.course_name,
-      // content: `<p>${course.building}</p>`,
-      class: 'health',
-      course_id: course.course_id,
+      events.value.push({
+        start: starttime,
+        end: endtimes,
+        title: course.course_name,
+        // content: `<p>${course.building}</p>`,
+        class: 'health',
+        course_id: course.course_id,
+      })
     })
+  }
+}
+
+const totalCreditsSelected = computed(() => {
+  let sum = 0
+  chosen_courses.value.forEach((course: any) => {
+    sum += course.credits
   })
+  return sum
+})
+
+async function sendFeedback() {
+  try {
+    let res = await axios.post(`${import.meta.env.VITE_API_URL}/send_feedback`, {
+      feedback_message: feedback_message.value,
+    })
+
+    alert('Feedback sent successfully')
+
+    feedback_message.value = ''
+    feedback_popup_is_visible.value = false
+  } catch (err) {
+    alert('An unexpected error occured')
+  }
 }
 
 // Fetch the terms
@@ -443,13 +499,13 @@ onMounted(async () => {
 
 <style>
 .vuecal__event.health {
-  background-color: rgba(253, 156, 66, 0.9);
-  border: 1px solid rgb(233, 136, 46);
+  background-color: rgba(2, 35, 99, 0.9);
+  border: 1px solid rgba(2, 35, 99, 0.9);
   color: #fff;
   padding: 0px 0px;
 }
 .vuecal__event.sport {
-  background-color: rgba(255, 102, 102, 0.9);
+  background-color: rgba(130, 11, 11, 0.9);
   border: 1px solid rgb(235, 82, 82);
   color: #fff;
   padding: 10px 0px;
@@ -457,10 +513,13 @@ onMounted(async () => {
 
 .vuecal__event-title {
   font-size: 12px;
+  padding: 10px 4px;
+  font-weight: 500;
 }
 
 .vuecal__event-time {
   font-size: 12px;
+  margin-top: -8px;
 }
 
 .vuecal__event-content {
@@ -478,6 +537,10 @@ onMounted(async () => {
 }
 
 .vuecal__flex.weekday-label span:last-of-type {
+  display: none;
+}
+
+.vuecal__no-event {
   display: none;
 }
 </style>

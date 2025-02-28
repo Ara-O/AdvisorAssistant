@@ -1,8 +1,9 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import json
-import tempfile
+from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
@@ -15,6 +16,7 @@ import time
 from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException, NoSuchWindowException
 from selenium.webdriver.support import expected_conditions as EC
 
+load_dotenv()
 app = Flask(__name__)
 CORS(app=app)
 
@@ -248,6 +250,24 @@ def fetch_course():
         print(e)
         return jsonify({"error": str(e)}), 500
 
+MAILGUN_API_URL = os.getenv("MAILGUN_API_URL")
+api_key = os.getenv("MAILGUN_API_KEY")
+
+@app.route("/send_feedback", methods=['POST'])
+def send_feedback():
+    try:
+        feedback_message = request.json["feedback_message"]
+        print(feedback_message)
+        
+        resp = requests.post(MAILGUN_API_URL, auth=("api", api_key),
+                             data={"from": "oladipoeyiara@gmail.com",
+                                   "to": "oladipoeyiara@gmail.com", "subject": "Course Viewer Feedback", "text": feedback_message})
+        
+        print(resp)
+        return "Feedback sent successfully", 200
+    except Exception as ex: 
+        print(ex)
+        return "Error", 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)  
