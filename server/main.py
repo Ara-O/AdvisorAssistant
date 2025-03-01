@@ -269,6 +269,11 @@ def send_feedback():
         print(ex)
         return "Error", 500
 
+@app.route("/upload_degree_evaluation", methods=['POST'])
+def upload_degree_evaluation():
+    print("upload deg eval")
+    return "Uploaded Successfully", 200
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)  
 

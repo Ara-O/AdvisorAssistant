@@ -22,7 +22,8 @@
           get a personalized schedule
         </p>
         <button
-          class="font-text mt-3 w-40 bg-udmercy-blue text-white font-semibold px-5 py-3 text-sm rounded-sm"
+          class="font-text mt-3 w-40 cursor-pointer bg-udmercy-blue text-white font-semibold px-5 py-3 text-sm rounded-sm"
+          @click="goToAdvisorAssistant"
         >
           Advisor Assistant
         </button>
@@ -39,9 +40,16 @@ import { useRouter } from 'vue-router'
 import DetroitMercyLogo from '../assets/detroit-mercy-logo.png'
 
 const router = useRouter()
+
 function goToCourseViewer() {
   router.push({
     name: 'course-viewer',
+  })
+}
+
+function goToAdvisorAssistant() {
+  router.push({
+    name: 'advisor-assistant',
   })
 }
 </script>

@@ -20,34 +20,6 @@
         </option>
       </select>
 
-      <!-- Cookies section -->
-
-      <!-- <label for="AWSALB" class="mt-5 mb-2">AWSALB Cookie</label>
-      <input
-        type="text"
-        id="AWSALB"
-        placeholder="AWSALB"
-        class="border font-text text-center rounded-sm h-10 w-64 border-gray-400"
-        v-model="awsalb"
-      />
-
-      <label for="AWSALBCORS" class="mt-5 mb-2">AWSALBCORS Cookie</label>
-      <input
-        type="text"
-        placeholder="AWSALBCORS"
-        class="border font-text text-center rounded-sm h-10 w-64 border-gray-400"
-        id="AWSALBCORS"
-        v-model="awsalbcors"
-      />
-
-      <label for="JSESSIONID" class="mt-5 mb-2">JSESSIONID Cookie</label>
-      <input
-        type="text"
-        placeholder="JSESSIONID"
-        class="border font-text text-center rounded-sm h-10 w-64 border-gray-400"
-        id="JSESSIONID"
-        v-model="jsessionid"
-      /> -->
       <span class="flex mt-3 gap-3">
         <input type="checkbox" id="use_cache" v-model="use_cache" />
         <label for="use_cache">Use Cache</label>
@@ -115,7 +87,7 @@
               />
             </span>
           </div>
-          <div class="max-h-[600px] h-auto box-border overflow-auto">
+          <div class="max-h-[500px] h-auto box-border overflow-auto">
             <div v-for="(courses, category) in filtered_course_list" class="my-2">
               <details v-if="courses.length !== 0">
                 <summary class="font-text" v-html="category"></summary>
