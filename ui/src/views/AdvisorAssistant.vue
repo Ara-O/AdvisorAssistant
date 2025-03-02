@@ -27,6 +27,7 @@
       >
         Upload File
       </button>
+      <p v-if="uploading_file">Uploading File...</p>
     </section>
     <section v-else>
       <section
@@ -175,6 +176,7 @@ const requirements_satisfied = ref<any>([])
 const requirements_not_satisfied = ref<any>([])
 const processed_requirements = ref()
 
+const uploading_file = ref<boolean>(false)
 const fileupload = ref()
 const events = ref<any>([])
 const chosen_courses = ref<any>([])
@@ -184,6 +186,7 @@ const upload_url = computed(() => {
 })
 
 const upload = () => {
+  uploading_file.value = true
   fileupload.value.upload()
 }
 
