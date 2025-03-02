@@ -240,70 +240,80 @@ function formatCourseDays(course: any) {
   return days.join(' | ')
 }
 
-function addCourse(course: any) {
-  if (course.is_selected) {
-    // Deselect the course and remove it from the chosen courses list if it
-    course.is_selected = false
-    // @ts-ignore
-    chosen_courses.value = chosen_courses.value.filter(
-      (coursed: any) => coursed.course_id !== course.course_id,
-    )
-    events.value = events.value.filter((classs: any) => classs.course_id !== course.course_id)
-    return
-  }
-
-  course.is_selected = true
-  chosen_courses.value.push(course)
-
-  let enddate = course.start_date.split('/')
-  let formattedEndDate = enddate[2] + '-' + enddate[1] + '-' + enddate[0]
-  let startdate = course.end_date.split('/')
-  let formattedStartDate = startdate[2] + '-' + startdate[1] + '-' + startdate[0]
-
-  if (course.meeting_begin_time) {
-    let beginTimeC = course.meeting_begin_time
-    let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
-
-    let endTimeC = course.meeting_end_time
-    let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
-
-    let days = []
-
-    if (course.monday) {
-      days.push('05')
-    }
-    if (course.tuesday) {
-      days.push('06')
-    }
-    if (course.wednesday) {
-      days.push('07')
-    }
-    if (course.thursday) {
-      days.push('08')
-    }
-    if (course.friday) {
-      days.push('09')
-    }
-    if (course.saturday) {
-      days.push('10')
-    }
-    if (course.sunday) {
-      days.push('11')
+async function addCourse(course: any) {
+  try {
+    if (course.is_selected) {
+      // Deselect the course and remove it from the chosen courses list if it
+      course.is_selected = false
+      // @ts-ignore
+      chosen_courses.value = chosen_courses.value.filter(
+        (coursed: any) => coursed.course_id !== course.course_id,
+      )
+      events.value = events.value.filter((classs: any) => classs.course_id !== course.course_id)
+      return
     }
 
-    days.forEach((day) => {
-      let starttime = '2025-05-' + day + ' ' + begintime
-      let endtimes = '2025-05-' + day + ' ' + endtime
-
-      events.value.push({
-        start: starttime,
-        end: endtimes,
-        title: course.course_name,
-        // content: `<p>${course.building}</p>`,
-        class: 'health',
-        course_id: course.course_id,
-      })
+    await axios.post(`${import.meta.env.VITE_API_URL}/check_course_validity`, {
+      course: course,
+      requirements_satisfied: requirements_satisfied.value,
     })
+
+    course.is_selected = true
+    chosen_courses.value.push(course)
+
+    let enddate = course.start_date.split('/')
+    let formattedEndDate = enddate[2] + '-' + enddate[1] + '-' + enddate[0]
+    let startdate = course.end_date.split('/')
+    let formattedStartDate = startdate[2] + '-' + startdate[1] + '-' + startdate[0]
+
+    if (course.meeting_begin_time) {
+      let beginTimeC = course.meeting_begin_time
+      let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
+
+      let endTimeC = course.meeting_end_time
+      let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
+
+      let days = []
+
+      if (course.monday) {
+        days.push('05')
+      }
+      if (course.tuesday) {
+        days.push('06')
+      }
+      if (course.wednesday) {
+        days.push('07')
+      }
+      if (course.thursday) {
+        days.push('08')
+      }
+      if (course.friday) {
+        days.push('09')
+      }
+      if (course.saturday) {
+        days.push('10')
+      }
+      if (course.sunday) {
+        days.push('11')
+      }
+
+      days.forEach((day) => {
+        let starttime = '2025-05-' + day + ' ' + begintime
+        let endtimes = '2025-05-' + day + ' ' + endtime
+
+        events.value.push({
+          start: starttime,
+          end: endtimes,
+          title: course.course_name,
+          // content: `<p>${course.building}</p>`,
+          class: 'health',
+          course_id: course.course_id,
+        })
+      })
+    }
+  } catch (err) {
+    console.log(err)
+    alert(err)
   }
 }
 
