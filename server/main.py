@@ -15,6 +15,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import time
 from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException, NoSuchWindowException
 from selenium.webdriver.support import expected_conditions as EC
+from pdfdataextractor import process_student_profile
 
 load_dotenv()
 app = Flask(__name__)
@@ -269,9 +270,25 @@ def send_feedback():
         print(ex)
         return "Error", 500
 
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 @app.route("/upload_degree_evaluation", methods=['POST'])
 def upload_degree_evaluation():
-    print("upload deg eval")
+    print("Uploaded degree evaluation")
+    
+    if 'degree_eval' not in request.files:
+            return "File not found", 500
+    
+    file = request.files['degree_eval']
+    
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    file.save(file_path)
+    
+    profile = process_student_profile(file_path)
+    print(profile)
+    
     return "Uploaded Successfully", 200
     
 if __name__ == '__main__':

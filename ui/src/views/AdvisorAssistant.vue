@@ -6,12 +6,15 @@
     >
       <h1 class="font-title font-medium text-4xl">Upload your Student Evaluation</h1>
       <p class="font-text font-medium">Upload your student evaluation file as a .mhtml file</p>
-      <p>To convert your degree evaluation to a .mhtml format, do ...</p>
+      <p>
+        To convert your degree evaluation to a .mhtml format, do ... Your degree evaluation file is
+        not saved anywhere
+      </p>
 
       <FileUpload
         ref="fileupload"
         mode="basic"
-        name="demo[]"
+        name="degree_eval"
         :url="upload_url"
         @upload="onUpload"
         class="!bg-udmercy-blue !border-udmercy-blue"

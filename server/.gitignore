@@ -4,3 +4,4 @@ course_data.json
 *.env
 *.db
 .env
+uploads/
