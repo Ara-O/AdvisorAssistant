@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import json
 import ast
 import html
+from flask import jsonify
 import re 
 
 
@@ -156,115 +157,125 @@ def clean_attribute(attr_value):
         return decoded.strip()
     return ""
 
+
+def clean_text(text):
+    text = re.sub(r'=\s*', '', text)
+
+    # Fix missing spaces between words by adding a space before capital letters if needed
+    text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)  # Add space between lowercase-uppercase transitions
+
+    # Restore spaces that may have been lost before hyphens
+    text = re.sub(r'(?<=\w)-(?=\w)', ' - ', text)  # Ensure spaces around hyphens
+
+    # Remove non-breaking spaces and weird encoded characters
+    text = text.replace('\xa0', ' ').replace('&nbsp;', ' ')
+
+    # Collapse multiple spaces into one
+    text = re.sub(r'\s+', ' ', text)
+            
+    text = text.replace('COMP', '')
+            
+    text = text.replace("Area Name:20 ", "")
+    
+    text = text.strip()
+    
+    text = text.replace("Requirement ", "")
+    
+    return text 
+
 def process_student_profile(file):
-    with open(file, 'r', encoding='utf-8') as f:
-        html_content = f.read()
-    
-    # Step 2: Parse the HTML with BeautifulSoup
-    soup = BeautifulSoup(html_content, 'html.parser')
-    
-    # Step 3: Extract tables (or any other relevant data)
-    # tables = soup.find_all('table')
-    
-    # areas = []
+    mhtml_file = file
+
+    # Step 1: Read and parse the MHTML file
+    with open(mhtml_file, 'rb') as file:
+        msg = message_from_binary_file(file)
         
-    # for i in range(len(tables)):
-    #     table = tables[i]
-    #     new_area={}
-        
-    #     # Finds the title of each section
-    #     caption = table.find('caption')
-    #     if caption is not None:
-    #         text = caption.text
-    #         text = re.sub(r'=\s*', '', text)
-
-    #         # Fix missing spaces between words by adding a space before capital letters if needed
-    #         text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)  # Add space between lowercase-uppercase transitions
-
-    #         # Restore spaces that may have been lost before hyphens
-    #         text = re.sub(r'(?<=\w)-(?=\w)', ' - ', text)  # Ensure spaces around hyphens
-
-    #         # Remove non-breaking spaces and weird encoded characters
-    #         text = text.replace('\xa0', ' ').replace('&nbsp;', ' ')
-
-    #         # Collapse multiple spaces into one
-    #         text = re.sub(r'\s+', ' ', text)
-            
-    #         text = text.replace('COMP', '')
-            
-    #         text = text.replace("Area Name:20 ", "")
-
-    #         new_area["caption"] = text.strip()
-            
-    #         requirements_not_satisfied = table.select('[color="#EE0000"]')
-            
-    #         new_area["courses"] = []
-        
-        
+    # Step 2: Find and decode the HTML part
+    html_part = None
     
-    requirements_not_satisfied = []
-    requirements_satisfied = []
+    for part in msg.walk():
+        if part.get_content_type() == "text/html":
+            html_part = part.get_payload(decode=True)
+            break
+
+    if html_part is None:
+        print("No HTML part found in the MHTML file.")
+        return jsonify({"message": "There was no HTML found"}), 400
     
-    for tag in soup.find_all('font', attrs={'color': True}):
-        clean_color = clean_attribute(tag['color'])
+    # Decode HTML content if it is base64-encoded
+    try:
+        html_content = base64.b64decode(html_part).decode('utf-8')
+     
+    except:
+        html_content = html_part.decode('utf-8')
+    
+    # Step 3: Parse the HTML with BeautifulSoup
+    soup = BeautifulSoup(html_content, 'html')
+    tables = soup.find_all('table')
+    
+    areas = []
+    
+    for i in range(len(tables)):
+        table = tables[i]
         new_area={}
-        new_area["courses"] = []
-        
-        if clean_color == "#EE0000\"":  
-            row =  tag.parent.parent 
-            tds = row.find_all("td")
-            text = tds[1].text
-            text = re.sub(r'=\s*', '', text)
-
-            # Fix missing spaces between words by adding a space before capital letters if needed
-            text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)  # Add space between lowercase-uppercase transitions
-
-            # Restore spaces that may have been lost before hyphens
-            text = re.sub(r'(?<=\w)-(?=\w)', ' - ', text)  # Ensure spaces around hyphens
-
-            # Remove non-breaking spaces and weird encoded characters
-            text = text.replace('\xa0', ' ').replace('&nbsp;', ' ')
-
-            # Collapse multiple spaces into one
-            text = re.sub(r'\s+', ' ', text)
+        caption = table.find('caption')
             
-            requirements_not_satisfied.append(text.strip())
+        if caption is not None:
+            new_area["caption"] = clean_text(caption.text)
             
-        if clean_color == "#000000\"":  
-            row = tag.parent.parent
-            tds = row.find_all("td")
-                        
-            if len(tds)>7:
-                course = tds[3].text.replace("Satisfied By","").replace("\xa0"," ")
-                grade = tds[7].text.replace("Grade","").replace("\n","")
-                subject = course.split(" ")
-                
-                if(len(subject)<2): 
-                    continue
-                
-                subject_num = subject[1]
-                subject = subject[0]
+            requirements_unsafisfied = table.select('[color="#EE0000"]')
+            
+            new_area["courses"] = []
+            
+            # For all the unsatisfied requirements in an area, append it under its associated courses
+            for req in requirements_unsafisfied:
+                row = req.parent.parent
+                tds = row.find_all("td")
+                courses = tds[1].text
+                text = clean_text(courses)
+                new_area["courses"].append(text)
+            
+            if len(requirements_unsafisfied) > 0 and new_area["caption"] != "Program Description" and new_area["caption"] != "Program Evaluation":
+                areas.append(new_area)
+    
+    # print(areas)
 
-                subjects_map = json.load(open("full_courses.json","r"))
+    requirements_satisfied_elements =  soup.select('[color="#000000"]')
+    requirements_satisfied = []
 
-                subject_description = subject
-                
-                if subject in subjects_map:
-                    subject_description = subjects_map[subject]
-                
-                course = subject_description + " " + subject_num
+    for req in requirements_satisfied_elements:
+        row = req.parent.parent
+        tds = row.find_all("td")
+        if len(tds)>7:
+            course = tds[3].text.replace("Satisfied By","").replace("\xa0"," ")
+            grade = tds[7].text.replace("Grade","").replace("\n","")
+            subject = course.split(" ")
+            if(len(subject)<2): 
+                continue
+            
+            subject_num = subject[1]
+            subject = subject[0]
 
-                requirements_satisfied.append({
-                    "course":course,
-                    "grade":grade
-                }) 
-                
+
+            subjects_map = json.load(open("full_courses.json","r"))
+
+            subject_description = subject
+            
+            if subject in subjects_map:
+                subject_description = subjects_map[subject]
+            
+            course = subject + " " + subject_num
+
+            requirements_satisfied.append({
+                "course":course,
+                "grade":grade
+            })
 
     return {
         "requirements_satisfied":  requirements_satisfied,
-        "requirements_not_satisfied": requirements_not_satisfied   
+        "requirements_not_satisfied": areas   
     }
-    #create_student_plan(token,needed)        
+    
 
 
 

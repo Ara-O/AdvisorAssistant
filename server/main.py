@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import re
 import requests
 import json
 from dotenv import load_dotenv
@@ -20,6 +21,41 @@ from pdfdataextractor import process_student_profile
 load_dotenv()
 app = Flask(__name__)
 CORS(app=app)
+
+def formatResult(course):
+    course_dict = {}
+    course_dict["course_name"] = course["courseTitle"]
+    course_dict["credits"] = course["creditHours"]
+    course_dict["current_enrollment"] = course["enrollment"]
+    course_dict["course_id"] = course["id"]
+    course_dict["section"] = course["sequenceNumber"]
+    course_dict["subject"] = course["subject"]
+    course_dict["course_number"] = course["courseNumber"]
+    course_dict["course_description"] = course["subjectDescription"]
+    course_dict["attributes"] = course["sectionAttributes"]
+    meetings = course["meetingsFaculty"]
+
+    # TODO: Some have multiple of this for multiple meeting times
+    if len(meetings) > 0:
+        meetings = meetings[0]
+        course_dict["meeting_begin_time"] = meetings["meetingTime"]["beginTime"]
+        course_dict["meeting_end_time"] = meetings["meetingTime"]["endTime"]
+        course_dict["meeting_hours_weekly"] = meetings["meetingTime"]["hoursWeek"]
+        course_dict["monday"] = meetings["meetingTime"]["monday"]
+        course_dict["tuesday"] = meetings["meetingTime"]["tuesday"]
+        course_dict["wednesday"] = meetings["meetingTime"]["wednesday"]
+        course_dict["thursday"] = meetings["meetingTime"]["thursday"]
+        course_dict["friday"] = meetings["meetingTime"]["friday"]
+        course_dict["saturday"] = meetings["meetingTime"]["saturday"]
+        course_dict["sunday"] = meetings["meetingTime"]["sunday"]
+        course_dict["start_date"] = meetings["meetingTime"]["startDate"]
+        course_dict["end_date"] = meetings["meetingTime"]["endDate"]
+        course_dict["building"] = meetings["meetingTime"]["building"]
+        course_dict["campus_description"] = meetings["meetingTime"]["campusDescription"]
+        course_dict["meeting_type_description"] = meetings["meetingTime"]["meetingTypeDescription"]
+    
+    return course_dict
+
 
 def formatResults(courses):
     formattedResult = []
@@ -284,12 +320,80 @@ def upload_degree_evaluation():
     file = request.files['degree_eval']
     
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    
     file.save(file_path)
     
-    profile = process_student_profile(file_path)
-    print(profile)
+    requirements = process_student_profile(file_path)
     
-    return "Uploaded Successfully", 200
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    
+    return requirements, 200
+
+
+def extract_course_code(text):
+    """Extracts course code from text using regex."""
+    match = re.search(r'\b[A-Z]+\d\b', text)  
+    return match.group(0) if match else None
+
+def find_matching_object(json_data, attribute_code):
+    print(f"Looking for attribute code {attribute_code}")
+    matching_attrs = []
+    """Finds the object in json_data where sectionAttributes contains the attribute_code."""
+    for obj in json_data:  # Iterate through list of objects
+        for section in obj.get("sectionAttributes", []):  # Check sectionAttributes in each object
+            if section.get("code") == attribute_code or (attribute_code in section.get("code")):
+                print("match found yay")
+                matching_attrs.append(obj)  # Return the full object containing the match
+    return matching_attrs  
+
+@app.route("/start-assistant", methods=['POST'])
+def startAdvisorAssistant():
+    request_data = request.json
+    
+    requirements_satisfied = request_data["requirements_satisfied"]
+    requirements_not_satisfied = request_data["requirements_not_satisfied"]
+
+    # TODO - MAKE THIS BASED ON THE TERM
+    with open("fall2025.json", "r") as file:
+        data = json.load(file) 
+
+    course_matched_data = {}
+    # Loop through all the satisfied requirements and find all the course times 
+    for req_outer in requirements_not_satisfied:
+        for req in req_outer["courses"]:
+            # Extract the requirements since one can have multiple under it
+            courses = re.findall(r"[A-Z]{2,4} \d{4}", req)
+            course_matched_data[req] = []
+            
+            attr_match = re.search(r'\b[A-Z]{1,2}\d\b', req)
+        
+            if attr_match:
+                attr = attr_match.group(0)
+                matched_object = find_matching_object(data, attr)
+                if len(matched_object) > 0:
+                    course_matched_data[req].extend(formatResults(matched_object))
+
+            for course in courses:
+                # Find course in JSON
+                # print(course)
+                subject = course.split()[0]
+                course_number = course.split()[1]
+                
+                match = next(
+                    (course for course in data if course["subject"] == subject and course["courseNumber"] == course_number),
+                    None
+                )
+                
+                # ideal: Find all the prerequisites as well and display that to the user
+                # might be a lot if the user is a new student, so fetching prerequisites can be done dynamically for an added course
+                # then it'll check if the pre-requisites are in the list of the course the user has already taken
+                if match:
+                    # print(match)
+                    course_matched_data[req].append(formatResult(match))
+                
+    
+    return course_matched_data, 200
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)  
