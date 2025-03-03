@@ -24,6 +24,7 @@ app = Flask(__name__)
 CORS(app=app)
 
 def formatResult(course):
+    # print("Formatting", course)
     course_dict = {}
     course_dict["course_name"] = course["courseTitle"]
     course_dict["credits"] = course["creditHours"]
@@ -62,8 +63,10 @@ def formatResult(course):
 def formatResults(courses):
     formattedResult = []
     for course in courses:
+        # print("Formatting", course)
         course_dict = {}
         course_dict["course_name"] = course["courseTitle"]
+        course_dict["course_reference_number"] = course["courseReferenceNumber"]
         course_dict["credits"] = course["creditHours"]
         course_dict["current_enrollment"] = course["enrollment"]
         course_dict["course_id"] = course["id"]
@@ -256,7 +259,7 @@ def fetch_course():
                 
         # Fetch total count
         response = requests.get(API_URL, params=params, cookies=cookies)
-        print(response)
+        # print(response)
         
         response_json = response.json()
         
@@ -382,17 +385,17 @@ def startAdvisorAssistant():
                 subject = course.split()[0]
                 course_number = course.split()[1]
                 
-                match = next(
-                    (course for course in data if course["subject"] == subject and course["courseNumber"] == course_number),
-                    None
-                )
+                matches = [
+                    course for course in data 
+                    if course["subject"] == subject and course["courseNumber"] == course_number
+                ]
                 
                 # ideal: Find all the prerequisites as well and display that to the user
                 # might be a lot if the user is a new student, so fetching prerequisites can be done dynamically for an added course
                 # then it'll check if the pre-requisites are in the list of the course the user has already taken
-                if match:
+                if len(matches) > 0:
                     # print(match)
-                    course_matched_data[req].append(formatResult(match))
+                    course_matched_data[req].extend(formatResults(matches))
                 
     
     return course_matched_data, 200
@@ -563,7 +566,7 @@ def check_course_validity():
     # Get course prerequisites 
     # TODO: Make based on selected term
     
-    print(course)
+    # print(course)
     url = "https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/searchResults/getSectionPrerequisites"
 
     session = requests.Session()  # Maintain session
@@ -602,8 +605,8 @@ def check_course_validity():
     prerequisites =  parse_prerequisites(course_prereqs)
     corequisites = parse_requirements(course_coreqs, "coReqs")
     
-    print("Prereqs", prerequisites)
-    print("Coreqs", corequisites)
+    # print("Prereqs", prerequisites)
+    # print("Coreqs", corequisites)
 
     return  jsonify({
         "prerequisites": prerequisites,

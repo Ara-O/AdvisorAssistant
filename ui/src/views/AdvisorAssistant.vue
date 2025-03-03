@@ -94,57 +94,69 @@
       <!-- PROCESSED REQS SECTION -->
       <section class="p-5 flex gap-8" v-else>
         <div class="w-lg">
-          <h1 class="font-title text-2xl mb-3 font-medium">Missing Requirements</h1>
-          <div class="mb-3">
-            <label for="">Hide Courses that are not Offered</label>
-            <input type="checkbox" class="ml-4" v-model="hide_courses_not_offered" />
-          </div>
-          <p>
-            Outstanding courses are automatically fetched based on either their course code or the
-            necessary attributes
-          </p>
-          <div class="max-h-[85vh] overflow-auto">
-            <div v-for="(val, key) in processed_requirements">
-              <details v-if="val.length > 0 || hide_courses_not_offered === false">
-                <summary class="font-title text-xl my-2">{{ key }}</summary>
-                <div v-if="val.length > 0">
-                  <div
-                    v-for="course in val"
-                    class="border box-border px-3 pb-5 cursor-pointer pt-4 my-2 rounded-md border-gray-300"
-                    @click="() => addCourse(course)"
-                    :class="{ 'selected-course': course.is_selected }"
-                  >
-                    <p class="font-medium overflow-ellipsis w-80">
-                      {{ course.subject }} {{ course.course_number }} - {{ course.course_name }}
-                    </p>
-                    <p class="text-md">
-                      Course Number: {{ course.course_number }} | Section {{ course.section }}
-                    </p>
-                    <p v-if="course.meeting_begin_time" class="text-[15px]">
-                      Time:
-                      {{
-                        course.meeting_begin_time.slice(0, 2) +
-                        ':' +
-                        course.meeting_begin_time.slice(2)
-                      }}
-                      -
-                      {{
-                        course.meeting_end_time.slice(0, 2) +
-                        ':' +
-                        course.meeting_end_time.slice(2)
-                      }}. Days: {{ formatCourseDays(course) }}.
-                    </p>
-                    <p v-else>This course does not have a set meeting time</p>
-                    <p v-if="course.attributes && course.attributes.length > 0">
-                      Attributes: {{ formatCourseAttributes(course) }}
-                    </p>
-                    <p v-if="course.credits">Credits: {{ course.credits }}</p>
-                  </div>
-                </div>
-
-                <p class="text-md" v-else>Not Offered</p>
-              </details>
+          <div class="h-[75vh] overflow-auto">
+            <h1 class="font-title text-2xl mb-3 font-medium">Missing Requirements</h1>
+            <div class="mb-3">
+              <label for="">Hide Courses that are not Offered</label>
+              <input type="checkbox" class="ml-4" v-model="hide_courses_not_offered" />
             </div>
+            <p>
+              Outstanding courses are automatically fetched based on either their course code or the
+              necessary attributes
+            </p>
+            <div class="max-h-[85vh] w-96 overflow-auto">
+              <div v-for="(val, key) in processed_requirements">
+                <details v-if="val.length > 0 || hide_courses_not_offered === false">
+                  <summary class="font-title text-xl my-2">{{ key }}</summary>
+                  <div v-if="val.length > 0">
+                    <div
+                      v-for="course in val"
+                      class="border box-border px-3 pb-5 cursor-pointer pt-4 my-2 rounded-md border-gray-300"
+                      @click="() => addCourse(course)"
+                      :class="{ 'selected-course': course.is_selected }"
+                    >
+                      <p class="font-medium overflow-ellipsis w-80">
+                        {{ course.subject }} {{ course.course_number }} - {{ course.course_name }}
+                      </p>
+                      <p class="text-md">
+                        Course Number: {{ course.course_number }} | Section {{ course.section }}
+                      </p>
+                      <p v-if="course.meeting_begin_time" class="text-[15px]">
+                        Time:
+                        {{
+                          course.meeting_begin_time.slice(0, 2) +
+                          ':' +
+                          course.meeting_begin_time.slice(2)
+                        }}
+                        -
+                        {{
+                          course.meeting_end_time.slice(0, 2) +
+                          ':' +
+                          course.meeting_end_time.slice(2)
+                        }}. Days: {{ formatCourseDays(course) }}.
+                      </p>
+                      <p v-else>This course does not have a set meeting time</p>
+                      <p v-if="course.attributes && course.attributes.length > 0">
+                        Attributes: {{ formatCourseAttributes(course) }}
+                      </p>
+                      <p v-if="course.credits">Credits: {{ course.credits }}</p>
+                    </div>
+                  </div>
+
+                  <p class="text-md" v-else>Not Offered</p>
+                </details>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h1 class="font-title text-2xl mb-3 font-medium">Chosen Courses</h1>
+            <p class="underline cursor-pointer">Click to save as a .txt file</p>
+            <ul class="mt-3 max-h-30 overflow-auto">
+              <li v-for="course in chosen_courses" class="font-text mb-3">
+                <p class="font-medium">{{ course.course_name }}</p>
+                <p>{{ formatCourseTime(course) }}</p>
+              </li>
+            </ul>
           </div>
         </div>
         <div class="w-full h-screen">
@@ -396,7 +408,6 @@ async function startAdvisorAssistant() {
 function checkForSatisfiedReq(subject: any, course_number: any) {
   const course_mappings = {
     ACC: 'Accounting',
-    extracted_rows: '1204',
     ADS: 'Addiction Studies',
     AEV: 'Advanced Electric Vehicle',
     AAS: 'African-American Studies',
@@ -498,6 +509,20 @@ function checkForSatisfiedReq(subject: any, course_number: any) {
   }
 
   return `Satisfied with a grade of ${grade_gotten}`
+}
+
+function formatCourseTime(course: any) {
+  if (!course.meeting_begin_time) {
+    return 'Course has no specified meeting time'
+  }
+
+  let beginTimeC = course.meeting_begin_time
+  let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
+
+  let endTimeC = course.meeting_end_time
+  let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
+
+  return `${begintime} - ${endtime}`
 }
 </script>
 
