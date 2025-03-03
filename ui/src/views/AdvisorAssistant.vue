@@ -149,8 +149,10 @@
             </div>
           </div>
           <div>
-            <h1 class="font-title text-2xl mb-3 font-medium">Chosen Courses</h1>
-            <p class="underline cursor-pointer">Click to save as a .txt file</p>
+            <h1 class="font-title text-2xl mb-3 mt-3 font-medium">Chosen Courses</h1>
+            <p class="underline cursor-pointer" @click="saveAsTxtFile">
+              Click to save as a .txt file
+            </p>
             <ul class="mt-3 max-h-30 overflow-auto">
               <li v-for="course in chosen_courses" class="font-text mb-3">
                 <p class="font-medium">{{ course.course_name }}</p>
@@ -509,6 +511,36 @@ function checkForSatisfiedReq(subject: any, course_number: any) {
   }
 
   return `Satisfied with a grade of ${grade_gotten}`
+}
+
+function saveAsTxtFile() {
+  let final_course_content = ''
+  let total_credits = 0
+  chosen_courses.value.forEach((course: any) => {
+    final_course_content += `Course Name: ${course.course_name} ${course.course_number}
+Time: ${formatCourseTime(course)}
+Credits: ${course.credits}
+Section: ${course.section}
+ 
+`
+
+    total_credits += course.credits
+  })
+
+  final_course_content += `Total Credits: ${total_credits}`
+
+  const blob = new Blob([final_course_content], { type: 'text/plain' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = 'course_selection.txt' // Set file name
+
+  // Trigger download
+  document.body.appendChild(link)
+  link.click()
+
+  // Cleanup
+  document.body.removeChild(link)
+  URL.revokeObjectURL(link.href)
 }
 
 function formatCourseTime(course: any) {
