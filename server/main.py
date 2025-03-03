@@ -564,12 +564,19 @@ def check_course_validity():
     # TODO: Make based on selected term
     
     print(course)
-    cookies = fetch_cookies("Fall 2025")
-    cookie_dict = {cookie["name"]: cookie["value"] for cookie in cookies}
+    url = "https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/searchResults/getSectionPrerequisites"
+
+    session = requests.Session()  # Maintain session
+    response = session.get(url)
+
+    cookies = session.cookies.get_dict()  # Extract cookies
+
+    # cookies = fetch_cookies("Fall 2025")
+    # cookie_dict = {cookie["name"]: cookie["value"] for cookie in cookies}
      
-    AWSALB = cookie_dict.get("AWSALB", "")
-    AWSALBCORS = cookie_dict.get("AWSALBCORS", "")
-    JSESSIONID = cookie_dict.get("JSESSIONID", "")
+    AWSALB = cookies.get("AWSALB", "")
+    AWSALBCORS = cookies.get("AWSALBCORS", "")
+    JSESSIONID = cookies.get("JSESSIONID", "")
 
     API_URL_PREREQS = "https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/searchResults/getSectionPrerequisites"
     API_URL_COREQS = "https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/searchResults/getCorequisites"

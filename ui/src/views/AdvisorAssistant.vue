@@ -300,6 +300,7 @@ async function addCourse(course: any) {
       return
     }
 
+    toast.clear()
     toast('Verifying if you can take the course...', {
       type: TYPE.INFO,
       timeout: 10000,
