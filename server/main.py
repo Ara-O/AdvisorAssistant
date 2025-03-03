@@ -591,10 +591,16 @@ def check_course_validity():
 
     course_prereqs = prereqs_response.text
     course_coreqs = coreqs_response.text
-    print("Prerequisites:", parse_prerequisites(course_prereqs))
-    print("Corequisites:", parse_requirements(course_coreqs, "coReqs"))
+    
+    prerequisites =  parse_prerequisites(course_prereqs)
+    corequisites = parse_requirements(course_coreqs, "coReqs")
+    
+    print("Prereqs", prerequisites)
+    print("Coreqs", corequisites)
 
-    return "bbaka", 200
+    return  jsonify({
+        "prerequisites": prerequisites,
+        "corequisites": corequisites }), 200
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)  
