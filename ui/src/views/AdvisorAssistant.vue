@@ -154,9 +154,17 @@
               Click to save as a .txt file
             </p>
             <ul class="mt-3 max-h-30 overflow-auto">
-              <li v-for="course in chosen_courses" class="font-text mb-3">
-                <p class="font-medium">{{ course.course_name }}</p>
-                <p>{{ formatCourseTime(course) }}</p>
+              <li v-for="course in chosen_courses" class="font-text mb-3 flex items-center gap-4">
+                <img
+                  :src="CancelIcon"
+                  alt="Cancel Icon"
+                  class="w-3 cursor-pointer"
+                  @click="removeCourse(course)"
+                />
+                <div>
+                  <p class="font-medium">{{ course.course_name }}</p>
+                  <p>{{ formatCourseTime(course) }}</p>
+                </div>
               </li>
             </ul>
           </div>
@@ -260,6 +268,15 @@ function formatCourseAttributes(course: any) {
   return attrs.join(' | ')
 }
 
+function removeCourse(course: any) {
+  // Deselect the course and remove it from the chosen courses list if it
+  course.is_selected = false
+  // @ts-ignore
+  chosen_courses.value = chosen_courses.value.filter(
+    (coursed: any) => coursed.course_id !== course.course_id,
+  )
+  events.value = events.value.filter((classs: any) => classs.course_id !== course.course_id)
+}
 function onUpload(event: any) {
   const response = JSON.parse(event.xhr.response)
   requirements_satisfied.value = response.requirements_satisfied
