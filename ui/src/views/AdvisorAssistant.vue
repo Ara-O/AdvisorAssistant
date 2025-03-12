@@ -34,18 +34,19 @@
         class="flex items-center flex-col justify-center h-screen"
         v-if="!course_history_verified"
       >
-        <div class="text-center flex flex-col gap-5 px-15">
+        <div class="text-center flex flex-col gap-5 px-10">
           <h1 class="font-title font-medium text-4xl">Verify your Course History</h1>
           <p class="text-md leading-8">
             The course extraction may not be perfect. Look through the courses to make sure they
             match, or at least look good enough
           </p>
           <section class="flex justify-center gap-20">
-            <article class="w-1/3">
-              <p class="font-medium text-xl underline mb-5">Requirements Not Satisfied:</p>
+            <article class="px-10 w-1/3">
+              <p class="font-medium text-xl underline mb-4">Requirements Not Satisfied:</p>
+              <p class="mb-4">These reflect how they are shown in your Degree Evaluation</p>
               <div class="max-h-[50vh] overflow-auto px-5">
                 <details v-for="requirement in requirements_not_satisfied" class="mb-5">
-                  <summary class="font-text cursor-pointer text-md font-medium leading-8">
+                  <summary class="font-text text-left cursor-pointer text-md font-medium leading-8">
                     {{ requirement.caption }}
                   </summary>
                   <div class="mt-5">
@@ -55,30 +56,33 @@
               </div>
             </article>
             <div class="h-full w-0.5 bg-gray-300 rounded-md"></div>
-            <article class="max-w-1/3">
-              <p class="font-medium text-xl underline mb-5">Requirements Satisfied:</p>
-              <div class="max-h-[50vh] px-5 overflow-auto flex flex-wrap justify-between gap-5">
+            <article class="w-1/3">
+              <p class="font-medium text-xl underline mb-4">Requirements Satisfied:</p>
+              <p class="mb-4">Hover over a course to see the attributes it satisfies</p>
+              <div
+                class="max-h-[50vh] px-5 overflow-auto flex flex-wrap justify-center gap-5 gap-x-10"
+              >
                 <span
                   v-for="req in requirements_satisfied"
                   class="flex gap-4 justify-center items-center"
                 >
-                  <img
-                    :src="CancelIcon"
-                    alt="Cancel Icon"
-                    class="w-3 cursor-pointer"
-                    @click="() => removeSatisfiedReq(req)"
-                  />
-                  <p
-                    class="w-22 whitespace-nowrap overflow-hidden text-ellipsis"
-                    :title="req.course"
-                  >
-                    {{ req.course }}: {{ req.min_grade }}
-                  </p>
+                  <img :src="GreenCheck" alt="Check Icon" class="w-3" />
                   <input
                     type="text"
                     v-model="req.grade"
-                    class="w-10 border-b outline-0 text-center"
+                    class="w-14 border-b outline-0 text-center"
                   />
+                  <p
+                    class="w-40 whitespace-nowrap text-start cursor-pointer overflow-hidden text-ellipsis"
+                    :title="parseSatisfiedAttrs(req)"
+                  >
+                    {{ req.course }}: {{ req.min_grade }}
+                    {{
+                      req.attributes_satisfied.length > 0
+                        ? '(' + parseSatisfiedAttrs(req) + ')'
+                        : ''
+                    }}
+                  </p>
                 </span>
               </div>
             </article>
@@ -97,8 +101,13 @@
           <div class="h-[75vh] overflow-auto">
             <h1 class="font-title text-2xl mb-3 font-medium">Missing Requirements</h1>
             <div class="mb-3">
-              <label for="">Hide Courses that are not Offered</label>
-              <input type="checkbox" class="ml-4" v-model="hide_courses_not_offered" />
+              <label for="hide_courses_not_offered">Hide Courses that are not Offered</label>
+              <input
+                type="checkbox"
+                class="ml-4"
+                id="hide_courses_not_offered"
+                v-model="hide_courses_not_offered"
+              />
             </div>
             <p>
               Outstanding courses are automatically fetched based on either their course code or the
@@ -121,21 +130,16 @@
                       <p class="text-md">
                         Course Number: {{ course.course_number }} | Section {{ course.section }}
                       </p>
-                      <p v-if="course.meeting_begin_time" class="text-[15px]">
-                        Time:
+
+                      <p class="text-[15px]" v-for="meeting in course.meeting_times">
+                        {{ meeting.meeting_type_description }} Times:
+                        {{ formatMeetingTime(meeting) }}.
                         {{
-                          course.meeting_begin_time.slice(0, 2) +
-                          ':' +
-                          course.meeting_begin_time.slice(2)
+                          formatCourseDays(meeting) !== ''
+                            ? `Days: ${formatCourseDays(meeting)}`
+                            : ''
                         }}
-                        -
-                        {{
-                          course.meeting_end_time.slice(0, 2) +
-                          ':' +
-                          course.meeting_end_time.slice(2)
-                        }}. Days: {{ formatCourseDays(course) }}.
                       </p>
-                      <p v-else>This course does not have a set meeting time</p>
                       <p v-if="course.attributes && course.attributes.length > 0">
                         Attributes: {{ formatCourseAttributes(course) }}
                       </p>
@@ -149,9 +153,17 @@
             </div>
           </div>
           <div>
-            <h1 class="font-title text-2xl mb-3 mt-3 font-medium">Chosen Courses</h1>
-            <p class="underline cursor-pointer" @click="saveAsTxtFile">
-              Click to save as a .txt file
+            <h1 class="font-title text-2xl mb-3 mt-3 font-medium">
+              Chosen Courses ({{ totalCredits }} credits)
+            </h1>
+            <p class="">
+              <span class="underline cursor-pointer" @click="saveAsTxtFile">
+                Click to save as a .txt file</span
+              >
+              |
+              <span class="cursor-pointer underline" @click="copyToClipboard">
+                Copy to Clipboard</span
+              >
             </p>
             <ul class="mt-3 max-h-30 overflow-auto">
               <li v-for="course in chosen_courses" class="font-text mb-3 flex items-center gap-4">
@@ -162,7 +174,10 @@
                   @click="removeCourse(course)"
                 />
                 <div>
-                  <p class="font-medium">{{ course.course_name }}</p>
+                  <p class="font-medium">
+                    {{ course.course_name }} ({{ course.subject }} {{ course.course_number }}) - CRN
+                    {{ course.course_reference_number }}
+                  </p>
                   <p>{{ formatCourseTime(course) }}</p>
                 </div>
               </li>
@@ -231,8 +246,10 @@ import { Dialog } from 'primevue'
 import { useToast, TYPE } from 'vue-toastification'
 import CancelIcon from '../assets/cancel-icon.png'
 import axios from 'axios'
+import { useClipboard } from '@vueuse/core'
 // @ts-ignore
 import VueCal from 'vue-cal'
+import GreenCheck from '../assets/green-logo.webp'
 
 const degree_evaluation_was_uploaded = ref<boolean>(false)
 const course_history_verified = ref<boolean>(false)
@@ -268,6 +285,14 @@ function formatCourseAttributes(course: any) {
   return attrs.join(' | ')
 }
 
+function parseSatisfiedAttrs(req: any): string {
+  if (req.attributes_satisfied.length == 0) {
+    return 'No attributes found (may not be updated)'
+  }
+
+  return req.attributes_satisfied.join(' | ')
+}
+
 function removeCourse(course: any) {
   // Deselect the course and remove it from the chosen courses list if it
   course.is_selected = false
@@ -280,15 +305,27 @@ function removeCourse(course: any) {
 function onUpload(event: any) {
   const response = JSON.parse(event.xhr.response)
   requirements_satisfied.value = response.requirements_satisfied
+
+  // Remove duplicates
+  requirements_satisfied.value = requirements_satisfied.value.filter(
+    (obj: any, index: any, self: any) =>
+      index === self.findIndex((o: any) => o.course === obj.course),
+  )
+
+  console.log(requirements_satisfied.value)
   requirements_not_satisfied.value = response.requirements_not_satisfied
   degree_evaluation_was_uploaded.value = true
   console.log(response)
 }
 
-function removeSatisfiedReq(req_param: any) {
-  requirements_satisfied.value = requirements_satisfied.value.filter(
-    (req: any) => !(req.course === req_param.course && req.grade === req_param.grade),
-  )
+function formatMeetingTime(meeting: any) {
+  if (meeting.meeting_begin_time === null) {
+    return 'No time specified'
+  }
+
+  const meeting_time = `${meeting.meeting_begin_time.slice(0, 2)}:${meeting.meeting_begin_time.slice(2)} - ${meeting.meeting_end_time.slice(0, 2)}:${meeting.meeting_end_time.slice(2)}`
+
+  return meeting_time
 }
 
 function formatCourseDays(course: any) {
@@ -356,57 +393,53 @@ async function addCourse(course: any) {
 function userHasAddedCourse(course: any) {
   course.is_selected = true
   chosen_courses.value.push(course)
+  course.meeting_times.forEach((meeting: any) => {
+    if (meeting.meeting_begin_time) {
+      let beginTimeC = meeting.meeting_begin_time
+      let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
 
-  let enddate = course.start_date.split('/')
-  let formattedEndDate = enddate[2] + '-' + enddate[1] + '-' + enddate[0]
-  let startdate = course.end_date.split('/')
-  let formattedStartDate = startdate[2] + '-' + startdate[1] + '-' + startdate[0]
+      let endTimeC = meeting.meeting_end_time
+      let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
 
-  if (course.meeting_begin_time) {
-    let beginTimeC = course.meeting_begin_time
-    let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
+      let days = []
 
-    let endTimeC = course.meeting_end_time
-    let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
+      if (meeting.monday) {
+        days.push('05')
+      }
+      if (meeting.tuesday) {
+        days.push('06')
+      }
+      if (meeting.wednesday) {
+        days.push('07')
+      }
+      if (meeting.thursday) {
+        days.push('08')
+      }
+      if (meeting.friday) {
+        days.push('09')
+      }
+      if (meeting.saturday) {
+        days.push('10')
+      }
+      if (meeting.sunday) {
+        days.push('11')
+      }
 
-    let days = []
+      days.forEach((day) => {
+        let starttime = '2025-05-' + day + ' ' + begintime
+        let endtimes = '2025-05-' + day + ' ' + endtime
 
-    if (course.monday) {
-      days.push('05')
-    }
-    if (course.tuesday) {
-      days.push('06')
-    }
-    if (course.wednesday) {
-      days.push('07')
-    }
-    if (course.thursday) {
-      days.push('08')
-    }
-    if (course.friday) {
-      days.push('09')
-    }
-    if (course.saturday) {
-      days.push('10')
-    }
-    if (course.sunday) {
-      days.push('11')
-    }
-
-    days.forEach((day) => {
-      let starttime = '2025-05-' + day + ' ' + begintime
-      let endtimes = '2025-05-' + day + ' ' + endtime
-
-      events.value.push({
-        start: starttime,
-        end: endtimes,
-        title: course.course_name,
-        // content: `<p>${course.building}</p>`,
-        class: 'health',
-        course_id: course.course_id,
+        events.value.push({
+          start: starttime,
+          end: endtimes,
+          title: course.course_name,
+          content: `<p>${meeting.meeting_type_description}</p>`,
+          class: 'health',
+          course_id: course.course_id,
+        })
       })
-    })
-  }
+    }
+  })
   course_to_add.value = {}
   course_info_is_visible.value = false
 }
@@ -530,21 +563,74 @@ function checkForSatisfiedReq(subject: any, course_number: any) {
   return `Satisfied with a grade of ${grade_gotten}`
 }
 
-function saveAsTxtFile() {
-  let final_course_content = ''
-  let total_credits = 0
+const totalCredits = computed(() => {
+  let total_creds = 0
   chosen_courses.value.forEach((course: any) => {
-    final_course_content += `Course Name: ${course.course_name} ${course.course_number}
-Time: ${formatCourseTime(course)}
-Credits: ${course.credits}
-Section: ${course.section}
- 
-`
-
-    total_credits += course.credits
+    total_creds += course.credits
   })
 
-  final_course_content += `Total Credits: ${total_credits}`
+  return total_creds
+})
+
+function copyToClipboard() {
+  let final_course_content = ''
+  chosen_courses.value.forEach((course: any) => {
+    let meeting_times = ''
+
+    course.meeting_times.forEach((meeting: any) => {
+      meeting_times += formatCourseTime(meeting) + '\n'
+    })
+
+    final_course_content += `Course Name: ${course.course_name} (${course.subject} ${course.course_number})
+
+Meeting Times:
+${meeting_times}
+Credits: ${course.credits}
+Section: ${course.section}
+CRN: ${course.course_reference_number}
+
+---------------------------
+
+`
+  })
+
+  final_course_content += `Total Credits: ${totalCredits.value}`
+
+  const source = ref(final_course_content)
+  const { text, copy, copied, isSupported } = useClipboard({ source })
+  copy(final_course_content)
+
+  if (isSupported) {
+    toast.clear()
+    toast('Successfully copied to clipboard', {
+      type: TYPE.INFO,
+    })
+  }
+}
+
+function saveAsTxtFile() {
+  let final_course_content = ''
+  chosen_courses.value.forEach((course: any) => {
+    let meeting_times = ''
+
+    course.meeting_times.forEach((meeting: any) => {
+      meeting_times += formatCourseTime(meeting) + '\n'
+    })
+
+    final_course_content += `Course Name: ${course.course_name} (${course.subject} ${course.course_number})
+
+Meeting Times:
+${meeting_times}
+Credits: ${course.credits}
+Section: ${course.section}
+CRN: ${course.course_reference_number}
+
+---------------------------
+
+`
+  })
+
+  final_course_content += `Total Credits: ${totalCredits.value}`
 
   const blob = new Blob([final_course_content], { type: 'text/plain' })
   const link = document.createElement('a')
@@ -560,18 +646,18 @@ Section: ${course.section}
   URL.revokeObjectURL(link.href)
 }
 
-function formatCourseTime(course: any) {
-  if (!course.meeting_begin_time) {
-    return 'Course has no specified meeting time'
+function formatCourseTime(meeting: any) {
+  if (!meeting.meeting_begin_time) {
+    return 'No meeting time was specified'
   }
 
-  let beginTimeC = course.meeting_begin_time
+  let beginTimeC = meeting.meeting_begin_time
   let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
 
-  let endTimeC = course.meeting_end_time
+  let endTimeC = meeting.meeting_end_time
   let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
 
-  return `${begintime} - ${endtime}`
+  return `${meeting.meeting_type_description}: ${begintime} - ${endtime}. Days: ${formatCourseDays(meeting)} `
 }
 </script>
 

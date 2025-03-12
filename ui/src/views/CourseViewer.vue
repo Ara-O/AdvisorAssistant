@@ -95,25 +95,18 @@
                   v-for="course in courses"
                   @click="() => addCourse(course)"
                   :class="{ 'selected-course': course.is_selected }"
-                  class="border box-border px-3 pb-5 pt-4 my-2 rounded-md border-gray-300"
+                  class="border box-border px-3 pb-5 pt-4 cursor-pointer my-2 rounded-md border-gray-300"
                 >
                   <p class="font-medium overflow-ellipsis w-80" v-html="course.course_name"></p>
                   <p class="text-[15px]">
                     Course Number: {{ course.course_number }} | Section {{ course.section }}
                   </p>
-                  <p v-if="course.meeting_begin_time" class="text-[15px]">
-                    Time:
+                  <p class="text-[15px]" v-for="meeting in course.meeting_times">
+                    {{ meeting.meeting_type_description }} Times: {{ formatMeetingTime(meeting) }}.
                     {{
-                      course.meeting_begin_time.slice(0, 2) +
-                      ':' +
-                      course.meeting_begin_time.slice(2)
+                      formatCourseDays(meeting) !== '' ? `Days: ${formatCourseDays(meeting)}` : ''
                     }}
-                    -
-                    {{
-                      course.meeting_end_time.slice(0, 2) + ':' + course.meeting_end_time.slice(2)
-                    }}. Days: {{ formatCourseDays(course) }}.
                   </p>
-                  <p v-else>This course does not have a set meeting time</p>
                   <p v-if="course.attributes && course.attributes.length > 0">
                     Attributes: {{ formatCourseAttributes(course) }}
                   </p>
@@ -124,7 +117,9 @@
           </div>
           <h2 class="text-xl font-text font-bold mt-5">Selected Courses</h2>
           <p class="my-3" v-if="chosen_courses.length !== 0">
-            Total Credits: {{ totalCreditsSelected }}
+            <span @click="copyToClipboard" class="underline cursor-pointer">Copy to Clipboard</span>
+            | Total Credits:
+            {{ totalCreditsSelected }}
           </p>
           <p v-if="chosen_courses.length == 0" class="mt-3">No courses have been selected yet</p>
           <div v-else>
@@ -136,7 +131,12 @@
                   @click="() => removeCourse(course)"
                   alt="Cancel Icon"
                 />
-                <p>{{ course.course_name }} ({{ course.credits ?? 'No' }} credits)</p>
+                <p>
+                  {{ course.course_name }}: CRN {{ course.course_reference_number }} ({{
+                    course.credits ?? 'No'
+                  }}
+                  credits)
+                </p>
               </div>
             </div>
           </div>
@@ -198,7 +198,9 @@ import VueCal from 'vue-cal'
 import CancelIcon from '../assets/cancel-icon.png'
 import axios from 'axios'
 import Dialog from 'primevue/dialog'
+import { useClipboard } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
+import { TYPE, useToast } from 'vue-toastification'
 
 type Term = {
   code: string
@@ -294,6 +296,15 @@ function removeCourse(course: any) {
   events.value = events.value.filter((classs: any) => classs.course_id !== course.course_id)
 }
 
+function formatMeetingTime(meeting: any) {
+  if (meeting.meeting_begin_time === null) {
+    return 'No time specified'
+  }
+
+  const meeting_time = `${meeting.meeting_begin_time.slice(0, 2)}:${meeting.meeting_begin_time.slice(2)} - ${meeting.meeting_end_time.slice(0, 2)}:${meeting.meeting_end_time.slice(2)}`
+
+  return meeting_time
+}
 function formatCourseDays(course: any) {
   const days = []
   if (course.monday) {
@@ -316,6 +327,10 @@ function formatCourseDays(course: any) {
   }
   if (course.sunday) {
     days.push('Sn')
+  }
+
+  if (days.length === 0) {
+    return ''
   }
 
   return days.join(' | ')
@@ -367,6 +382,71 @@ async function findCourses() {
   }
 }
 
+function formatCourseTime(meeting: any) {
+  if (!meeting.meeting_begin_time) {
+    return 'No meeting time was specified'
+  }
+
+  let beginTimeC = meeting.meeting_begin_time
+  let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
+
+  let endTimeC = meeting.meeting_end_time
+  let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
+
+  return `${meeting.meeting_type_description}: ${begintime} - ${endtime}. Days: ${formatCourseDays(meeting)} `
+}
+
+const totalCredits = computed(() => {
+  let total_creds = 0
+  chosen_courses.value.forEach((course: any) => {
+    total_creds += course.credits
+  })
+
+  return total_creds
+})
+
+const toast = useToast()
+
+function copyToClipboard() {
+  let final_course_content = ''
+  chosen_courses.value.forEach((course: any) => {
+    let meeting_times = ''
+
+    course.meeting_times.forEach((meeting: any) => {
+      meeting_times += formatCourseTime(meeting) + '\n'
+    })
+
+    final_course_content += `Course Name: ${course.course_name} (${course.subject} ${course.course_number})
+
+Meeting Times:
+${meeting_times}
+Credits: ${course.credits}
+Section: ${course.section}
+CRN: ${course.course_reference_number}
+
+---------------------------
+
+`
+  })
+
+  final_course_content += `Total Credits: ${totalCredits.value}`
+
+  const source = ref(final_course_content)
+  const { text, copy, copied, isSupported } = useClipboard({ source })
+  copy(final_course_content)
+
+  if (isSupported) {
+    toast.clear()
+    toast('Successfully copied to clipboard', {
+      type: TYPE.INFO,
+    })
+  } else {
+    toast('Copying is not supported', {
+      type: TYPE.INFO,
+    })
+  }
+}
+
 function addCourse(course: any) {
   if (course.is_selected) {
     // Deselect the course and remove it from the chosen courses list if it
@@ -382,56 +462,53 @@ function addCourse(course: any) {
   course.is_selected = true
   chosen_courses.value.push(course)
 
-  let enddate = course.start_date.split('/')
-  let formattedEndDate = enddate[2] + '-' + enddate[1] + '-' + enddate[0]
-  let startdate = course.end_date.split('/')
-  let formattedStartDate = startdate[2] + '-' + startdate[1] + '-' + startdate[0]
+  course.meeting_times.forEach((meeting: any) => {
+    if (meeting.meeting_begin_time) {
+      let beginTimeC = meeting.meeting_begin_time
+      let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
 
-  if (course.meeting_begin_time) {
-    let beginTimeC = course.meeting_begin_time
-    let begintime = beginTimeC.slice(0, 2) + ':' + beginTimeC.slice(2)
+      let endTimeC = meeting.meeting_end_time
+      let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
 
-    let endTimeC = course.meeting_end_time
-    let endtime = endTimeC.slice(0, 2) + ':' + endTimeC.slice(2)
+      let days = []
 
-    let days = []
+      if (meeting.monday) {
+        days.push('05')
+      }
+      if (meeting.tuesday) {
+        days.push('06')
+      }
+      if (meeting.wednesday) {
+        days.push('07')
+      }
+      if (meeting.thursday) {
+        days.push('08')
+      }
+      if (meeting.friday) {
+        days.push('09')
+      }
+      if (meeting.saturday) {
+        days.push('10')
+      }
+      if (meeting.sunday) {
+        days.push('11')
+      }
 
-    if (course.monday) {
-      days.push('05')
-    }
-    if (course.tuesday) {
-      days.push('06')
-    }
-    if (course.wednesday) {
-      days.push('07')
-    }
-    if (course.thursday) {
-      days.push('08')
-    }
-    if (course.friday) {
-      days.push('09')
-    }
-    if (course.saturday) {
-      days.push('10')
-    }
-    if (course.sunday) {
-      days.push('11')
-    }
+      days.forEach((day) => {
+        let starttime = '2025-05-' + day + ' ' + begintime
+        let endtimes = '2025-05-' + day + ' ' + endtime
 
-    days.forEach((day) => {
-      let starttime = '2025-05-' + day + ' ' + begintime
-      let endtimes = '2025-05-' + day + ' ' + endtime
-
-      events.value.push({
-        start: starttime,
-        end: endtimes,
-        title: course.course_name,
-        // content: `<p>${course.building}</p>`,
-        class: 'health',
-        course_id: course.course_id,
+        events.value.push({
+          start: starttime,
+          end: endtimes,
+          title: course.course_name,
+          content: `<p>${meeting.meeting_type_description}</p>`,
+          class: 'health',
+          course_id: course.course_id,
+        })
       })
-    })
-  }
+    }
+  })
 }
 
 const totalCreditsSelected = computed(() => {

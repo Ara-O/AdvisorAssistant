@@ -23,43 +23,6 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app=app)
 
-def formatResult(course):
-    # print("Formatting", course)
-    course_dict = {}
-    course_dict["course_name"] = course["courseTitle"]
-    course_dict["credits"] = course["creditHours"]
-    course_dict["course_reference_number"] = course["courseReferenceNumber"]
-    course_dict["current_enrollment"] = course["enrollment"]
-    course_dict["course_id"] = course["id"]
-    course_dict["section"] = course["sequenceNumber"]
-    course_dict["subject"] = course["subject"]
-    course_dict["course_number"] = course["courseNumber"]
-    course_dict["course_description"] = course["subjectDescription"]
-    course_dict["attributes"] = course["sectionAttributes"]
-    meetings = course["meetingsFaculty"]
-
-    # TODO: Some have multiple of this for multiple meeting times
-    if len(meetings) > 0:
-        meetings = meetings[0]
-        course_dict["meeting_begin_time"] = meetings["meetingTime"]["beginTime"]
-        course_dict["meeting_end_time"] = meetings["meetingTime"]["endTime"]
-        course_dict["meeting_hours_weekly"] = meetings["meetingTime"]["hoursWeek"]
-        course_dict["monday"] = meetings["meetingTime"]["monday"]
-        course_dict["tuesday"] = meetings["meetingTime"]["tuesday"]
-        course_dict["wednesday"] = meetings["meetingTime"]["wednesday"]
-        course_dict["thursday"] = meetings["meetingTime"]["thursday"]
-        course_dict["friday"] = meetings["meetingTime"]["friday"]
-        course_dict["saturday"] = meetings["meetingTime"]["saturday"]
-        course_dict["sunday"] = meetings["meetingTime"]["sunday"]
-        course_dict["start_date"] = meetings["meetingTime"]["startDate"]
-        course_dict["end_date"] = meetings["meetingTime"]["endDate"]
-        course_dict["building"] = meetings["meetingTime"]["building"]
-        course_dict["campus_description"] = meetings["meetingTime"]["campusDescription"]
-        course_dict["meeting_type_description"] = meetings["meetingTime"]["meetingTypeDescription"]
-    
-    return course_dict
-
-
 def formatResults(courses):
     formattedResult = []
     for course in courses:
@@ -75,27 +38,32 @@ def formatResults(courses):
         course_dict["course_number"] = course["courseNumber"]
         course_dict["course_description"] = course["subjectDescription"]
         course_dict["attributes"] = course["sectionAttributes"]
+        course_dict["meeting_times"] = []
+        
         meetings = course["meetingsFaculty"]
 
-        # TODO: Some have multiple of this for multiple meeting times
+        #Some have multiple of this for multiple meeting times
         if len(meetings) > 0:
-            meetings = meetings[0]
-            course_dict["meeting_begin_time"] = meetings["meetingTime"]["beginTime"]
-            course_dict["meeting_end_time"] = meetings["meetingTime"]["endTime"]
-            course_dict["meeting_hours_weekly"] = meetings["meetingTime"]["hoursWeek"]
-            course_dict["monday"] = meetings["meetingTime"]["monday"]
-            course_dict["tuesday"] = meetings["meetingTime"]["tuesday"]
-            course_dict["wednesday"] = meetings["meetingTime"]["wednesday"]
-            course_dict["thursday"] = meetings["meetingTime"]["thursday"]
-            course_dict["friday"] = meetings["meetingTime"]["friday"]
-            course_dict["saturday"] = meetings["meetingTime"]["saturday"]
-            course_dict["sunday"] = meetings["meetingTime"]["sunday"]
-            course_dict["start_date"] = meetings["meetingTime"]["startDate"]
-            course_dict["end_date"] = meetings["meetingTime"]["endDate"]
-            course_dict["building"] = meetings["meetingTime"]["building"]
-            course_dict["campus_description"] = meetings["meetingTime"]["campusDescription"]
-            course_dict["meeting_type_description"] = meetings["meetingTime"]["meetingTypeDescription"]
+            for idx, meeting in enumerate(meetings):
+                meeting_time = {}
+                meeting_time["meeting_begin_time"] = meeting["meetingTime"]["beginTime"]
+                meeting_time["meeting_end_time"] = meeting["meetingTime"]["endTime"]
+                meeting_time["meeting_hours_weekly"] = meeting["meetingTime"]["hoursWeek"]
+                meeting_time["monday"] = meeting["meetingTime"]["monday"]
+                meeting_time["tuesday"] = meeting["meetingTime"]["tuesday"]
+                meeting_time["wednesday"] = meeting["meetingTime"]["wednesday"]
+                meeting_time["thursday"] = meeting["meetingTime"]["thursday"]
+                meeting_time["friday"] = meeting["meetingTime"]["friday"]
+                meeting_time["saturday"] = meeting["meetingTime"]["saturday"]
+                meeting_time["sunday"] = meeting["meetingTime"]["sunday"]
+                meeting_time["start_date"] = meeting["meetingTime"]["startDate"]
+                meeting_time["end_date"] = meeting["meetingTime"]["endDate"]
+                meeting_time["building"] = meeting["meetingTime"]["building"]
+                meeting_time["campus_description"] = meeting["meetingTime"]["campusDescription"]
+                meeting_time["meeting_type_description"] = meeting["meetingTime"]["meetingTypeDescription"]
 
+                course_dict["meeting_times"].append(meeting_time)
+                
         formattedResult.append(course_dict)
         
     return formattedResult
@@ -329,6 +297,18 @@ def upload_degree_evaluation():
     file.save(file_path)
     
     requirements = process_student_profile(file_path)
+    
+    with open("fall2025.json", "r") as file:
+        data = json.load(file) 
+        # print(data)
+        for req in requirements['requirements_satisfied']:
+            req['attributes_satisfied'] = []
+            # found_attributes = False
+            for full_course in data:
+                if f"{full_course['subject']} {full_course['courseNumber']}" == req['course']:
+                    for attr in full_course['sectionAttributes']:
+                        req['attributes_satisfied'].append(str(attr['code']).replace("KA", ""))
+                    break
     
     if os.path.exists(file_path):
         os.remove(file_path)
