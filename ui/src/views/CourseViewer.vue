@@ -5,6 +5,11 @@
       v-if="!courses_have_been_fetched"
       class="h-screen flex-col items-center flex justify-center"
     >
+      <router-link
+        to="/"
+        class="font-text underline font-medium text-gray-600 absolute top-6 cursor-pointer left-10"
+        >Return To Home</router-link
+      >
       <h1 class="font-title font-medium text-4xl">Choose A Term</h1>
       <select
         type="text"
@@ -40,13 +45,13 @@
           <h2 class="text-xl font-text font-bold mb-1">All Courses</h2>
           <div class="flex gap-4">
             <div class="mt-3 mb-3">
-              <label for="name_search" class="block font-semibold">Search by Name</label>
+              <label for="name_search" class="block font-semibold">Search by Course Title</label>
               <input
                 type="text"
                 id="name_search"
                 v-model="search_by_name_field"
                 class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
-                placeholder="Search By Name"
+                placeholder="Search By Course Title"
               />
             </div>
             <div class="mt-3 mb-3">
@@ -97,20 +102,25 @@
                   :class="{ 'selected-course': course.is_selected }"
                   class="border box-border px-3 pb-5 pt-4 cursor-pointer my-2 rounded-md border-gray-300"
                 >
-                  <p class="font-medium overflow-ellipsis w-80" v-html="course.course_name"></p>
-                  <p class="text-[15px]">
-                    Course Number: {{ course.course_number }} | Section {{ course.section }}
-                  </p>
+                  <p
+                    class="font-medium overflow-ellipsis w-80"
+                    v-html="
+                      course.course_name + ' - ' + course.subject + ' ' + course.course_number + ''
+                    "
+                  ></p>
                   <p class="text-[15px]" v-for="meeting in course.meeting_times">
                     {{ meeting.meeting_type_description }} Times: {{ formatMeetingTime(meeting) }}.
                     {{
                       formatCourseDays(meeting) !== '' ? `Days: ${formatCourseDays(meeting)}` : ''
                     }}
                   </p>
+                  <p class="text-[15px]">
+                    Section {{ course.section }} | Credits: {{ course.credits }}
+                  </p>
                   <p v-if="course.attributes && course.attributes.length > 0">
                     Attributes: {{ formatCourseAttributes(course) }}
                   </p>
-                  <p v-if="course.credits">Credits: {{ course.credits }}</p>
+                  <!-- <p v-if="course.credits"></p> -->
                 </div>
               </details>
             </div>

@@ -26,6 +26,10 @@ CORS(app=app)
 def formatResults(courses):
     formattedResult = []
     for course in courses:
+        # Filter for only mcnichols campus or online
+        if(course["campusDescription"] != "McNichols Campus" and course["campusDescription"] != "Online" ):
+            continue
+
         # print("Formatting", course)
         course_dict = {}
         course_dict["course_name"] = course["courseTitle"]

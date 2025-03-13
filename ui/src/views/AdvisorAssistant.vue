@@ -4,6 +4,11 @@
       v-if="!degree_evaluation_was_uploaded"
       class="w-full text-center h-screen flex flex-col gap-4 justify-center items-center"
     >
+      <router-link
+        to="/"
+        class="font-text underline font-medium text-gray-600 absolute top-6 cursor-pointer left-10"
+        >Return To Home</router-link
+      >
       <h1 class="font-title font-medium text-4xl">Upload your Student Evaluation</h1>
       <p class="font-text font-medium">Upload your student evaluation file as an MHTML file</p>
       <p class="max-w-3xl leading-8">
@@ -110,8 +115,8 @@
               />
             </div>
             <p>
-              Outstanding courses are automatically fetched based on either their course code or the
-              necessary attributes
+              Outstanding courses are automatically fetched based on either their course subject or
+              the necessary attributes
             </p>
             <div class="max-h-[85vh] w-96 overflow-auto">
               <div v-for="(val, key) in processed_requirements">
