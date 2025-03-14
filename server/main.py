@@ -302,17 +302,18 @@ def upload_degree_evaluation():
     
     requirements = process_student_profile(file_path)
     
-    with open("fall2025.json", "r") as file:
-        data = json.load(file) 
-        # print(data)
-        for req in requirements['requirements_satisfied']:
-            req['attributes_satisfied'] = []
-            # found_attributes = False
-            for full_course in data:
-                if f"{full_course['subject']} {full_course['courseNumber']}" == req['course']:
-                    for attr in full_course['sectionAttributes']:
-                        req['attributes_satisfied'].append(str(attr['code']).replace("KA", ""))
-                    break
+    # print(requirements)
+    
+    # with open("fall2025.json", "r") as file:
+    #     data = json.load(file) 
+    #     for req in requirements['requirements_satisfied']:
+    #         req['attributes_satisfied'] = []
+    #         # found_attributes = False
+    #         for full_course in data:
+    #             if f"{full_course['subject']} {full_course['courseNumber']}" == req['course']:
+    #                 for attr in full_course['sectionAttributes']:
+    #                     req['attributes_satisfied'].append(str(attr['code']).replace("KA", ""))
+    #                 break
     
     # After processing, delete the file
     if os.path.exists(file_path):
@@ -350,10 +351,18 @@ def startAdvisorAssistant():
 
     course_matched_data = {}
     # Loop through all the satisfied requirements and find all the course times 
-    for req_outer in requirements_not_satisfied:
-        for req in req_outer["courses"]:
+    for req in requirements_not_satisfied:
+            courses = []
             # Extract the requirements since one can have multiple under it
-            courses = re.findall(r"[A-Z]{2,4} \d{4}", req)
+            course_matches = re.findall(r"([A-Z]{2,4}) (\d{4})(/\d{4})?", req)
+            
+            
+            for subject, num1, num2 in course_matches:
+                courses.append(f"{subject} {num1}")  # Add first course
+                if num2:  # If there is a second number (e.g., /1210)
+                    courses.append(f"{subject} {num2[1:]}")  
+                    
+            # courses = re.findall(r"[A-Z]{2,4} \d{4}", req)
             course_matched_data[req] = []
             
             attr_match = re.search(r'\b[A-Z]{1,2}\d\b', req)
@@ -366,6 +375,7 @@ def startAdvisorAssistant():
 
             for course in courses:
                 # Find course in JSON
+                # print(course)
                 # print(course)
                 subject = course.split()[0]
                 course_number = course.split()[1]

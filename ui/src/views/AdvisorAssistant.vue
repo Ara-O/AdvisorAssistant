@@ -52,14 +52,15 @@
               <p class="font-medium text-xl underline mb-4">Requirements Not Satisfied:</p>
               <p class="mb-4">These reflect how they are shown in your Degree Evaluation</p>
               <div class="max-h-[50vh] overflow-auto px-5">
-                <details v-for="requirement in requirements_not_satisfied" class="mb-5">
-                  <summary class="font-text text-left cursor-pointer text-md font-medium leading-8">
-                    {{ requirement.caption }}
-                  </summary>
-                  <div class="mt-5">
+                <p
+                  v-for="requirement in requirements_not_satisfied"
+                  class="font-text text-left mb-5 cursor-pointer text-md font-medium leading-8"
+                >
+                  - {{ requirement }}
+                </p>
+                <!-- <div class="mt-5">
                     <p>Missing Courses: {{ requirement.courses.join(', ') }}</p>
-                  </div>
-                </details>
+                  </div> -->
               </div>
             </article>
             <div class="h-full w-0.5 bg-gray-300 rounded-md"></div>
@@ -67,7 +68,7 @@
               <p class="font-medium text-xl underline mb-4">Requirements Satisfied:</p>
               <p class="mb-4">Hover over a course to see the attributes it satisfies</p>
               <div
-                class="max-h-[50vh] px-5 overflow-auto flex flex-wrap justify-center gap-5 gap-x-10"
+                class="max-h-[50vh] px-5 overflow-auto flex flex-wrap justify-start gap-5 gap-x-10"
               >
                 <span
                   v-for="req in requirements_satisfied"
@@ -76,19 +77,15 @@
                   <img :src="GreenCheck" alt="Check Icon" class="w-3" />
                   <input
                     type="text"
-                    v-model="req.grade"
-                    class="w-14 border-b outline-0 text-center"
+                    :value="req.grade || 'In Prog'"
+                    class="w-15 border-b outline-0 font-text text-center"
                   />
                   <p
-                    class="w-40 whitespace-nowrap text-start cursor-pointer overflow-hidden text-ellipsis"
-                    :title="parseSatisfiedAttrs(req)"
+                    class="w-96 whitespace-nowrap text-start cursor-pointer text-ellipsis"
+                    :title="req.attributes"
                   >
-                    {{ req.course }}: {{ req.min_grade }}
-                    {{
-                      req.attributes_satisfied.length > 0
-                        ? '(' + parseSatisfiedAttrs(req) + ')'
-                        : ''
-                    }}
+                    ({{ req.requirement }}) - {{ req.title }}
+                    {{ req.attributes.length > 0 ? '(' + req.attributes + ')' : '' }}
                   </p>
                 </span>
               </div>
@@ -220,7 +217,7 @@
       <div class="mt-2" v-if="course_prerequisites !== 'No prerequisite information available.'">
         <p v-if="course_prerequisites.length == 0">No prerequitie information available</p>
         <div v-else v-for="req in course_prerequisites" class="leading-8">
-          <p>{{ req.subject }}: {{ req.course_number }}. Minimum Grade: {{ req.min_grade }}</p>
+          <p>{{ req.subject }} {{ req.course_number }}. Minimum Grade: {{ req.min_grade }}</p>
           <p>Requirement Satisfied: {{ checkForSatisfiedReq(req.subject, req.course_number) }}</p>
           <hr class="my-3 text-gray-300" />
         </div>
@@ -342,13 +339,13 @@ async function sendFeedback() {
   }
 }
 
-function parseSatisfiedAttrs(req: any): string {
-  if (req.attributes_satisfied.length == 0) {
-    return 'No attributes found (may not be updated)'
-  }
+// function parseSatisfiedAttrs(req: any): string {
+//   if (req.attributes_satisfied.length == 0) {
+//     return 'No attributes found (may not be updated)'
+//   }
 
-  return req.attributes_satisfied.join(' | ')
-}
+//   return req.attributes_satisfied.join(' | ')
+// }
 
 function removeCourse(course: any) {
   // Deselect the course and remove it from the chosen courses list if it
@@ -359,6 +356,7 @@ function removeCourse(course: any) {
   )
   events.value = events.value.filter((classs: any) => classs.course_id !== course.course_id)
 }
+
 function onUpload(event: any) {
   const response = JSON.parse(event.xhr.response)
   requirements_satisfied.value = response.requirements_satisfied
@@ -366,10 +364,10 @@ function onUpload(event: any) {
   // Remove duplicates
   requirements_satisfied.value = requirements_satisfied.value.filter(
     (obj: any, index: any, self: any) =>
-      index === self.findIndex((o: any) => o.course === obj.course),
+      index === self.findIndex((o: any) => o.requirement === obj.requirement),
   )
 
-  console.log(requirements_satisfied.value)
+  // console.log(requirements_satisfied.value)
   requirements_not_satisfied.value = response.requirements_not_satisfied
   degree_evaluation_was_uploaded.value = true
   console.log(response)
@@ -596,8 +594,8 @@ function checkForSatisfiedReq(subject: any, course_number: any) {
     Object.entries(course_mappings).map(([key, value]) => [value, key]),
   )
 
+  // console.log(subject)
   const subject_title = reverse_course_mappings[subject]
-  console.log(subject_title)
 
   if (subject_title === undefined) {
     return "Can't verify"
@@ -606,9 +604,13 @@ function checkForSatisfiedReq(subject: any, course_number: any) {
   let grade_gotten = ''
   requirements_satisfied.value.forEach((req: any) => {
     let course_name = `${subject_title} ${course_number}`
-
-    // console.log(course_name, req.course)
-    if (req.course === course_name) {
+    console.log(`Requirement: "${String(req.requirement)}" (${String(req.requirement).length})`)
+    console.log(`Course Name: "${course_name}" (${course_name.length})`)
+    if (
+      String(req.requirement).replace(/\s+/g, ' ').trim() ===
+      course_name.replace(/\s+/g, ' ').trim()
+    ) {
+      console.log('ALE')
       grade_gotten = req.grade
     }
   })

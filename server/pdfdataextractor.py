@@ -7,6 +7,7 @@ import ast
 import html
 from flask import jsonify
 import re 
+import pandas as pd
 
 
 def get_content(cell,index):
@@ -183,16 +184,56 @@ def clean_text(text):
     
     return text 
 
+
+def parse_html_table(table):
+    """
+    Parse an HTML table handling rowspans and colspans.
+    Returns a list of rows (each row is a list of cell texts).
+    """
+    rows = table.find_all("tr")
+    grid = []
+    # Dictionary to track cells with rowspan that should appear in future rows.
+    # Keys are (row_index, col_index) tuples.
+    spanning = {}
+    
+    for row_index, row in enumerate(rows):
+        cells = row.find_all("td")
+        row_data = []
+        col = 0
+        # Check if any cell from previous row spans into this row.
+        while (row_index, col) in spanning:
+            row_data.append(spanning[(row_index, col)])
+            col += 1
+        
+        for cell in cells:
+            # Remove header divs (e.g., the "Met", "Requirement", etc. labels)
+            for header in cell.find_all("div", class_="xe-col-xs"):
+                header.decompose()
+            text = cell.get_text(separator=" ", strip=True)
+            rowspan = int(cell.get("rowspan", 1))
+            colspan = int(cell.get("colspan", 1))
+            
+            # Fill in the cell (and duplicate if colspan > 1)
+            for i in range(col, col + colspan):
+                row_data.append(text)
+                # If rowspan > 1, mark this cell for the following rows.
+                if rowspan > 1:
+                    for j in range(1, rowspan):
+                        spanning[(row_index + j, i)] = text
+            col += colspan
+        grid.append(row_data)
+    return grid
+
 def process_student_profile(file):
     mhtml_file = file
-
+    
     # Step 1: Read and parse the MHTML file
     with open(mhtml_file, 'rb') as file:
         msg = message_from_binary_file(file)
         
     # Step 2: Find and decode the HTML part
     html_part = None
-    
+
     for part in msg.walk():
         if part.get_content_type() == "text/html":
             html_part = part.get_payload(decode=True)
@@ -200,81 +241,80 @@ def process_student_profile(file):
 
     if html_part is None:
         print("No HTML part found in the MHTML file.")
-        return jsonify({"message": "There was no HTML found"}), 400
-    
+        # return jsonify({"message": "There was no HTML found"}), 400
+
     # Decode HTML content if it is base64-encoded
     try:
         html_content = base64.b64decode(html_part).decode('utf-8')
-     
+        
     except:
         html_content = html_part.decode('utf-8')
-    
-    # Step 3: Parse the HTML with BeautifulSoup
-    soup = BeautifulSoup(html_content, 'html')
-    tables = soup.find_all('table')
-    
-    areas = []
-    
-    for i in range(len(tables)):
-        table = tables[i]
-        new_area={}
-        caption = table.find('caption')
-            
-        if caption is not None:
-            new_area["caption"] = clean_text(caption.text)
-            
-            requirements_unsafisfied = table.select('[color="#EE0000"]')
-            
-            new_area["courses"] = []
-            
-            # For all the unsatisfied requirements in an area, append it under its associated courses
-            for req in requirements_unsafisfied:
-                row = req.parent.parent
-                tds = row.find_all("td")
-                courses = tds[1].text
-                text = clean_text(courses)
-                new_area["courses"].append(text)
-            
-            if len(requirements_unsafisfied) > 0 and new_area["caption"] != "Program Description" and new_area["caption"] != "Program Evaluation":
-                areas.append(new_area)
-    
-    requirements_satisfied_elements =  soup.select('[color="#000000"]')
-    requirements_satisfied = []
 
-    for req in requirements_satisfied_elements:
-        row = req.parent.parent
+    # Parse the HTML content
+    soup = BeautifulSoup(html_content, "html.parser")
+    all_tables = soup.findAll("tbody")
+
+    all_reqs = []
+    
+    # Define the column names in the desired order
+    columns = ["met", "requirement", "term", "satisfied_by", "title", "attribute", "credits", "grade", "source"]
+
+    for tbody in all_tables:
+        # Parse the table and create a grid of cells
+        grid = parse_html_table(tbody)
+
+        # Convert grid rows into a list of dictionaries.
+        # If a row has fewer than 9 columns (due to rowspan), we fill missing values from previous row if needed.
+        parsed_data = []
+        last_row = {}
+        for row in grid:
+            # Pad row if necessary
+            if len(row) < len(columns):
+                row += [""] * (len(columns) - len(row))
+            # For the 'met' and 'requirement' columns, if empty, inherit from the last row.
+            current = dict(zip(columns, row[:len(columns)]))
+            if not current["met"]:
+                current["met"] = last_row.get("met", "")
+            if not current["requirement"]:
+                current["requirement"] = last_row.get("requirement", "")
+            parsed_data.append(current)
+            last_row = current
+
+        # print(df)
+        all_reqs.extend(parsed_data)
         
-        print(row)
-        print("\n\n")
-        tds = row.find_all("td")
-        if len(tds)>7:
-            course = tds[3].text.replace("Satisfied By","").replace("\xa0"," ")
-            grade = tds[7].text.replace("Grade","").replace("\n","")
-            # print(course, tds[3])
-            subject = course.split(" ")
-            if(len(subject)<2): 
-                continue
-            
-            subject_num = subject[1]
-            subject = subject[0]
+    all_reqs_df = pd.DataFrame(all_reqs, columns=columns)
+    all_reqs_df = all_reqs_df[all_reqs_df["met"].isin(["Yes", "No"])]
+    # all_reqs_df = all_reqs_df[all_reqs_df["requirement"].str.len() >= 4]
+    pattern = r'^\s*\d+(\.\d+)?\s*$'
 
-            subjects_map = json.load(open("full_courses.json","r"))
+    # Filter out rows where 'requirement' matches the decimal string pattern
+    all_reqs_df = all_reqs_df[~all_reqs_df["requirement"].str.match(pattern, na=False)]
+    all_reqs_df = all_reqs_df.drop_duplicates()
+    all_reqs_df = all_reqs_df[~all_reqs_df["requirement"].isin(["Message:", "Any additional"])]
+    
 
-            subject_description = subject
-            
-            if subject in subjects_map:
-                subject_description = subjects_map[subject]
-            
-            course = subject + " " + subject_num
 
-            requirements_satisfied.append({
-                "course":course,
-                "grade":grade
+    requirements_met = []
+    requirements_not_met = []
+
+    # Iterate through each row in the DataFrame
+    for _, row in all_reqs_df.iterrows():
+        if row['met'] == 'Yes' and len(row['title']) > 0:
+            # Append an object with title, requirement, and grade for met requirements
+            requirements_met.append({
+                'title': row['title'],
+                'requirement': row['satisfied_by'],
+                'grade': row['grade'],
+                'attributes': row['attribute'].replace("KA", "")
             })
+        elif row['met'] == 'No':
+            # Append just the requirement string for requirements not met
+            requirements_not_met.append(row['requirement'])
 
     return {
-        "requirements_satisfied":  requirements_satisfied,
-        "requirements_not_satisfied": areas   
+        "requirements_satisfied":  requirements_met,
+        "requirements_not_satisfied": requirements_not_met   
     }
     
 
