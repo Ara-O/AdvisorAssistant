@@ -11,11 +11,13 @@
       >
       <h1 class="font-title font-medium text-4xl">Upload your Student Evaluation</h1>
       <p class="font-text font-medium">Upload your student evaluation file as an MHTML file</p>
-      <p class="max-w-3xl leading-8">
+      <p class="max-w-4xl leading-8">
         To convert your degree evaluation to a .mhtml format, go to the degree evaluation page, and
-        click CTRL S. Make sure to save the webpage as one file (in .mhtml format). Your degree
-        evaluation file is not saved anywhere (except in the process of extracting your courses,
-        after which it is permanently deleted)
+        click CTRL S. Make sure to save the webpage as one file (in .mhtml format).
+        <span class="font-semibold">
+          Your degree evaluation file is not saved anywhere (except in the process of extracting
+          your courses, after which it is permanently deleted)</span
+        >
       </p>
 
       <FileUpload
@@ -241,6 +243,37 @@
         Add Course
       </button>
     </Dialog>
+    <div class="absolute bottom-5 right-3">
+      <button
+        @click="feedback_popup_is_visible = true"
+        class="bg-udmercy-blue text-white font-text shadow-md font-medium px-5 text-sm py-3 rounded-full cursor-pointer"
+      >
+        Feedback/Comments
+      </button>
+    </div>
+    <Dialog
+      v-model:visible="feedback_popup_is_visible"
+      modal
+      header="Feedback/Comments"
+      :style="{ width: '25rem', 'font-family': 'Raleway' }"
+    >
+      <span class="text-surface-500 font-medium dark:text-surface-400 block mb-8"
+        >Provide feedback, comments, or bugs!</span
+      >
+      <textarea
+        name="feedback"
+        placeholder="Enter Feedback"
+        v-model="feedback_message"
+        class="border border-gray-300 mt-[-10px] box-border p-3 rounded-md block w-full h-40"
+        id="text-area"
+      ></textarea>
+      <button
+        @click="sendFeedback"
+        class="bg-udmercy-blue mt-6 text-white font-text shadow-md font-medium px-5 text-sm py-3 rounded-full cursor-pointer"
+      >
+        Send Feedback
+      </button>
+    </Dialog>
   </main>
 </template>
 
@@ -281,6 +314,8 @@ const upload = () => {
   fileupload.value.upload()
 }
 
+const feedback_popup_is_visible = ref<boolean>(false)
+
 function formatCourseAttributes(course: any) {
   const attrs: any = []
   course.attributes.forEach((attr: any) => {
@@ -288,6 +323,23 @@ function formatCourseAttributes(course: any) {
   })
 
   return attrs.join(' | ')
+}
+
+const feedback_message = ref<string>('')
+
+async function sendFeedback() {
+  try {
+    let res = await axios.post(`${import.meta.env.VITE_API_URL}/send_feedback`, {
+      feedback_message: feedback_message.value,
+    })
+
+    alert('Feedback sent successfully')
+
+    feedback_message.value = ''
+    feedback_popup_is_visible.value = false
+  } catch (err) {
+    alert('An unexpected error occured')
+  }
 }
 
 function parseSatisfiedAttrs(req: any): string {

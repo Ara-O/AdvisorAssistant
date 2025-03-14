@@ -1,0 +1,68 @@
+,met,requirement,term,satisfied_by,title,attribute,credits,grade,source
+44,Yes,CSSE 1710,Fall 2021,CSSE 1710,Introduction to Programming I,,3.000,B-,UDM
+45,Yes,CSSE 1711,Fall 2021,CSSE 1711,Programming I Lab,,1.000,A-,UDM
+46,Yes,CSSE 1720,Winter 2022,CSSE 1720,Introduction to Programming II,,3.000,C,UDM
+47,Yes,CSSE 1721,Winter 2022,CSSE 1721,Programming II Lab,,1.000,A,UDM
+48,Yes,CSSE 2130,Fall 2022,CSSE 2130,Java,,3.000,B+,UDM
+49,Yes,CSSE 3430,Fall 2022,CSSE 3430,Data Structures,,3.000,C+,UDM
+50,No,CSSE 3540,,,,,,,
+51,Yes,CSSE 4150,Fall 2023,CSSE 4150,Intro to Software Engineering,,3.000,C+,UDM
+52,No,CSSE 4440,,,,,,,
+53,Yes,CSSE 4490,Winter 2024,CSSE 4490,Operating Systems,,3.000,,In Progress
+54,No,CSSE 4540,,,,,,,
+55,No,CSSE 4550,,,,,,,
+56,No,CSSE 4570,,,,,,,
+57,No,CSSE 4610,,,,,,,
+58,No,CSSE 4951,,,,,,,
+59,No,CSSE 4952,,,,,,,
+60,Yes,ELEE 2640,Winter 2024,ELEE 2640,Digital Logic Circuits I,,3.000,,In Progress
+61,No,ELEE 4680,,,,,,,
+62,No,ELEE 4690,,,,,,,
+63,No,ELEE 4800,,,,,,,
+64,Yes,MTH 1410,Fall 2022,MTH 1410,Analytic Geom and Calculus I,,4.000,C,UDM
+65,No,MTH 1420,,,,,,,
+66,No,MTH 2760,,,,,,,
+67,No,MTH 3020,,,,,,,
+68,No,MTH 4270,,,,,,,
+69,No,"Select one Technical Elective (3 credits) from the following: CSSE 3270, 3560, 4160, 4400, 4500, 4590, 4620, 4640, 4670, 4900; ELEE 4640, 4780, 4920",,,,,,,
+70,No,"Select one Technical Elective: CSSE 3270, 3560, 4160, 4400, 4500, 4590, 4620, 4640, 4670, 4900; ELEE 4640, 4780, 4920",,,,,,,
+71,Yes,Any additional CSSE courses (may include courses with grades of C- or D that were not accepted above),Winter 2023,CSSE 3540,Database Systems & Programming,,3.000,D,UDM
+72,Yes,Any additional CSSE courses (may include courses with grades of C- or D that were not accepted above),,,,,,,
+73,Yes,Select one class/lab combination: BIO 1200/1210 or PHY 1600/1610,Winter 2023,PHY 1600,General Physics I,,3.000,C,UDM
+74,Yes,Select one class/lab combination: BIO 1200/1210 or PHY 1600/1610,Winter 2023,PHY 1610,General Physics Laboratory I,,1.000,A,UDM
+75,No,"Select another class/lab combination: BIO 1200/1210, BIO 1220/1230, CHM 1070/1100, PHY 1600/1610, PHY 1620/1630",Fall 2023,PHY 1630,General Physics Laboratory II,,1.000,A,UDM
+76,Yes,ENGR 1000,Fall 2022,ENGR 1000,Engineering Ethics,,2.000,A-,UDM
+77,Yes,ENGR 3000,Fall 2021,ENGR 3000,Intro Cooperative Education,,1.000,A,UDM
+78,Yes,ENL 3030,Fall 2023,ENL 3030,Technical Writing,,3.000,A-,UDM
+79,Yes,CTA 3010,Summer 2023,CTA 3010,Engineering Co-Op I,,2.000,B+,UDM
+80,No,CTA 3020,,,,,,,
+81,No,ENGR 3110,,,,,,,
+83,Yes,Message: It is highly recommended that students select Core classes that may fulfill more than one category.,,,,,,,
+84,Yes,CST 1010 [A1],Fall 2022,CST 1010,Fundamentals of Speech,KAA1,3.000,B,UDM
+85,Yes,ENL 1310 [A2],Winter 2022,ENL 1310,Academic Writing,KAA2,3.000,B-,UDM
+86,Yes,ENL 1310 [A2],,,,,,,
+87,Yes,Select one Qualitative/ Symbolic Reasoning course [B1]. Met with program requirement: MTH 1410.,Winter 2022,MTH 1400,Elementary Functions,KAB1,3.000,B+,UDM
+88,No,Select one Statistical/ Probabilistic Reasoning course [B2]. Met with program requirement: MTH 4270.,,,,,,,
+90,Yes,Select one Physical Sciences course (some may also require a lab) [C1]. May be met with a program requirement: (BIO 1200 and BIO 1210) or (PHY 1600 and PHY 1610).,Winter 2023,PHY 1600,General Physics I,KAC1,3.000,C,UDM
+91,Yes,Select one Physical Sciences course (some may also require a lab) [C1]. May be met with a program requirement: (BIO 1200 and BIO 1210) or (PHY 1600 and PHY 1610).,Winter 2023,PHY 1610,General Physics Laboratory I,KAC1,1.000,A,UDM
+92,No,Select one Social Sciences course [C2]. Met with program requirement: ENGR 3110.,,,,,,,
+94,Yes,PHL 1000 [D1],Fall 2021,PHL 1000,Introduction to Philosophy,KAD1,3.000,C,UDM
+95,Yes,*Reminder: Select a D2 or D3 course that will also fulfill IT4.,,,,,,,
+96,Yes,Select one Religious Knowledge course [D2]*.,Winter 2023,RELS 2180,Black Religion in America,KAD2,3.000,B-,UDM
+97,Yes,Select one additional Philosophy or Religious Studies Elective [D3]*.,Winter 2022,RELS 3530,Dynamics of Spiritual Growth,KAD3,3.000,A-,UDM
+98,Yes,Select one additional Philosophy or Religious Studies Elective [D3]*.,,,,,,,
+99,Yes,Select one Historical Experiences course [E1].,Winter 2022,HIS 2510,United States Since 1877,KAE1,3.000,C+,UDM
+100,Yes,Select one Literary Experiences course [E2].,Winter 2023,ENL 2450,Study of Poetry,KAE2,3.000,B,UDM
+101,Yes,Select one Aesthetic Experiences course [E3].,Fall 2023,ENL 2550,Study of Film,KAE3,3.000,A,UDM
+102,Yes,Select one Ethics course [F1]. Met with program requirement: ENGR 1000.,Fall 2022,ENGR 1000,Engineering Ethics,KAF1,2.000,A-,UDM
+103,Yes,Select one RWR course or sequence of courses [IT1]. Met with program requirement: ENL 3030.,Fall 2023,ENL 3030,Technical Writing,IT1,3.000,A-,UDM
+104,Yes,Select one Critical Thinking course (may include a lab) [IT2]. Met with program requirement: CSSE 4150.,Winter 2022,HIS 2510,United States Since 1877,IT2,3.000,C+,UDM
+105,No,Select one Cultural Diversity course [IT3]. Met with program requirement: ENGR 3110.,,,,,,,
+106,Yes,Select one Human Difference course [IT4].,Winter 2023,RELS 2180,Black Religion in America,IT4,3.000,B-,UDM
+107,Yes,Select one Personal Spiritual Dev course or sequence of courses [IT5]. Met with program requirements: ENGR 3000 AND CTA 3010 AND CTA 3020.,Winter 2022,RELS 3530,Dynamics of Spiritual Growth,IT5,3.000,A-,UDM
+108,Yes,Select one Spirituality and Social Justice course [IT6]. Met with program requirement: ENGR 1000.,Winter 2022,RELS 3530,Dynamics of Spiritual Growth,IT6,3.000,A-,UDM
+109,Yes,All Previously Unused Credits,Winter 2024,ELEE 2650,Digital Logic Circuits I Lab,,1.000,,In Progress
+110,Yes,All Previously Unused Credits,Winter 2024,ELEE 4000,Hardware/Software Integration,,3.000,,In Progress
+111,Yes,All Previously Unused Credits,Fall 2021,ENL 1000,College Writing Lab,,1.000,A,UDM
+112,Yes,All Previously Unused Credits,Fall 2021,ENL 1300,College Writing,,3.000,B-,UDM
+113,Yes,All Previously Unused Credits,Fall 2021,UAS 1070,Academic & Athletic Transition,,1.000,A,UDM

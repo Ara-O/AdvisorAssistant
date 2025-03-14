@@ -238,24 +238,25 @@ def process_student_profile(file):
             if len(requirements_unsafisfied) > 0 and new_area["caption"] != "Program Description" and new_area["caption"] != "Program Evaluation":
                 areas.append(new_area)
     
-    # print(areas)
-
     requirements_satisfied_elements =  soup.select('[color="#000000"]')
     requirements_satisfied = []
 
     for req in requirements_satisfied_elements:
         row = req.parent.parent
+        
+        print(row)
+        print("\n\n")
         tds = row.find_all("td")
         if len(tds)>7:
             course = tds[3].text.replace("Satisfied By","").replace("\xa0"," ")
             grade = tds[7].text.replace("Grade","").replace("\n","")
+            # print(course, tds[3])
             subject = course.split(" ")
             if(len(subject)<2): 
                 continue
             
             subject_num = subject[1]
             subject = subject[0]
-
 
             subjects_map = json.load(open("full_courses.json","r"))
 

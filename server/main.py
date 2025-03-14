@@ -314,6 +314,7 @@ def upload_degree_evaluation():
                         req['attributes_satisfied'].append(str(attr['code']).replace("KA", ""))
                     break
     
+    # After processing, delete the file
     if os.path.exists(file_path):
         os.remove(file_path)
     
