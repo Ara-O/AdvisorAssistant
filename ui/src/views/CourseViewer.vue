@@ -510,7 +510,7 @@ function addCourse(course: any) {
         events.value.push({
           start: starttime,
           end: endtimes,
-          title: course.course_name,
+          title: `${course.subject} ${course.course_number} - ${course.course_name}`,
           content: `<p>${meeting.meeting_type_description}</p>`,
           class: 'health',
           course_id: course.course_id,

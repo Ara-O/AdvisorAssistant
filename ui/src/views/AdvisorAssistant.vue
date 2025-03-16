@@ -113,7 +113,10 @@
                 v-model="hide_courses_not_offered"
               />
             </div>
-            <p>
+            <p class="underline cursor-pointer mb-4" @click="course_viewer_popup_is_visible = true">
+              Open Course Viewer
+            </p>
+            <p class="mb-3">
               Outstanding courses are automatically fetched based on either their course subject or
               the necessary attributes
             </p>
@@ -128,9 +131,10 @@
                       @click="() => addCourse(course)"
                       :class="{ 'selected-course': course.is_selected }"
                     >
-                      <p class="font-medium overflow-ellipsis w-80">
-                        {{ course.subject }} {{ course.course_number }} - {{ course.course_name }}
-                      </p>
+                      <p
+                        class="font-medium overflow-ellipsis w-80"
+                        v-html="`${course.subject} ${course.course_number} - ${course.course_name}`"
+                      ></p>
                       <p class="text-md">
                         Course Number: {{ course.course_number }} | Section {{ course.section }}
                       </p>
@@ -182,7 +186,7 @@
                     {{ course.course_name }} ({{ course.subject }} {{ course.course_number }}) - CRN
                     {{ course.course_reference_number }}
                   </p>
-                  <p>{{ formatCourseTime(course) }}</p>
+                  <!-- <p>{{ formatCourseTime(course.meeting_times) }}</p> -->
                 </div>
               </li>
             </ul>
@@ -249,6 +253,93 @@
       </button>
     </div>
     <Dialog
+      v-model:visible="course_viewer_popup_is_visible"
+      modal
+      header="Course Viewer"
+      :style="{ width: '50vw', 'font-family': 'Raleway' }"
+    >
+      <div class="w-[50vw] min-w-[300px]">
+        <div class="flex gap-4">
+          <div class="">
+            <label for="name_search" class="block font-semibold">Search by Course Title</label>
+            <input
+              type="text"
+              id="name_search"
+              v-model="search_by_name_field"
+              class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
+              placeholder="Search By Course Title"
+            />
+          </div>
+          <div class="">
+            <label for="name_search" class="block font-semibold">Search by Type</label>
+            <select
+              type="text"
+              id="name_search"
+              v-model="search_by_course_type"
+              class="border border-solid mt-2 h-10 px-3 w-36 font-text text-sm py-2 border-gray-300 rounded-sm"
+              placeholder="Search By Name"
+            >
+              <option :value="null">All Types</option>
+              <option :value="acronym" v-for="(full_title, acronym) in course_types">
+                {{ acronym }}: {{ full_title }}
+              </option>
+            </select>
+          </div>
+          <span>
+            <label for="name_search" class="block font-semibold">Attribute</label>
+            <input
+              type="text"
+              id="name_search"
+              v-model="search_by_attribute_field"
+              class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
+              placeholder="Search By Attribute"
+            />
+          </span>
+          <span>
+            <label for="course_no_search" class="block font-semibold">Course Number</label>
+            <input
+              type="text"
+              id="course_no_search"
+              v-model="search_by_course_no_field"
+              class="border border-solid mt-2 px-3 w-36 font-text text-sm py-2 border-gray-300 rounded-sm"
+              placeholder="Search By No."
+            />
+          </span>
+        </div>
+        <div class="h-[500px] box-border overflow-auto">
+          <div v-for="(courses, category) in filtered_course_list" class="my-2">
+            <details v-if="courses.length !== 0">
+              <summary class="font-text" v-html="category"></summary>
+              <div
+                v-for="course in courses"
+                @click="() => addCourse(course)"
+                :class="{ 'selected-course': course.is_selected }"
+                class="border box-border px-3 pb-5 pt-4 max-w-96 cursor-pointer my-2 rounded-md border-gray-300"
+              >
+                <p
+                  class="font-medium overflow-ellipsis w-80"
+                  v-html="
+                    course.course_name + ' - ' + course.subject + ' ' + course.course_number + ''
+                  "
+                ></p>
+                <p class="text-[15px]" v-for="meeting in course.meeting_times">
+                  {{ meeting.meeting_type_description }} Times: {{ formatMeetingTime(meeting) }}.
+                  {{ formatCourseDays(meeting) !== '' ? `Days: ${formatCourseDays(meeting)}` : '' }}
+                </p>
+                <p class="text-[15px]">
+                  Section {{ course.section }} | Credits: {{ course.credits }}
+                </p>
+                <p v-if="course.attributes && course.attributes.length > 0">
+                  Attributes: {{ formatCourseAttributes(course) }}
+                </p>
+                <!-- <p v-if="course.credits"></p> -->
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </Dialog>
+    <Dialog
       v-model:visible="feedback_popup_is_visible"
       modal
       header="Feedback/Comments"
@@ -275,7 +366,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import FileUpload from 'primevue/fileupload'
 import { Dialog } from 'primevue'
 import { useToast, TYPE } from 'vue-toastification'
@@ -296,14 +387,66 @@ const toast = useToast()
 const uploading_file = ref<boolean>(false)
 const fileupload = ref()
 const events = ref<any>([])
+const course_types = ref<any>([])
+
 const hide_courses_not_offered = ref<boolean>(false)
+const course_viewer_popup_is_visible = ref<boolean>(false)
 const chosen_courses = ref<any>([])
 const course_prerequisites = ref<any>([])
 const course_corequisites = ref<any>([])
 const course_to_add = ref({})
+const search_by_name_field = ref<string>('')
+const search_by_attribute_field = ref<string>('')
+const search_by_course_no_field = ref<string>('')
+const search_by_course_type = ref<string | null>(null)
 
 const upload_url = computed(() => {
   return `${import.meta.env.VITE_API_URL}/upload_degree_evaluation`
+})
+
+const filtered_course_list = computed(() => {
+  let filtered_courses = { ...ordered_course_list.value }
+
+  // Filter by course name
+  if (search_by_name_field.value.trim() !== '') {
+    for (let key in filtered_courses) {
+      filtered_courses[key] = filtered_courses[key].filter((course: any) =>
+        course.course_name.toLowerCase().includes(search_by_name_field.value.toLowerCase()),
+      )
+    }
+  }
+
+  // Filter by attribute
+  if (search_by_attribute_field.value.trim() !== '') {
+    for (let key in filtered_courses) {
+      filtered_courses[key] = filtered_courses[key].filter((course: any) =>
+        course.attributes.some((attribute: any) =>
+          attribute.code.toLowerCase().includes(search_by_attribute_field.value.toLowerCase()),
+        ),
+      )
+    }
+  }
+
+  // Filter by course number
+  if (search_by_course_no_field.value.trim() !== '') {
+    for (let key in filtered_courses) {
+      filtered_courses[key] = filtered_courses[key].filter((course: any) =>
+        course.course_number.toLowerCase().includes(search_by_course_no_field.value.toLowerCase()),
+      )
+    }
+  }
+
+  // Filter by course type
+  if (search_by_course_type.value && search_by_course_type.value.trim() !== '') {
+    for (let key in filtered_courses) {
+      filtered_courses[key] = filtered_courses[key].filter((course: any) =>
+        // @ts-ignore
+        course.subject.toLowerCase().includes(search_by_course_type.value.toLowerCase()),
+      )
+    }
+  }
+
+  return filtered_courses
 })
 
 const upload = () => {
@@ -321,6 +464,39 @@ function formatCourseAttributes(course: any) {
 
   return attrs.join(' | ')
 }
+
+const retrieved_terms = ref({})
+
+const ordered_course_list = ref<any>({})
+
+onMounted(async () => {
+  let res = await axios.get(`${import.meta.env.VITE_API_URL}/fetch_courses`, {
+    params: {
+      term_name: 'Fall 2025',
+      term_code: '202610',
+      use_cache: true,
+    },
+  })
+
+  const courses = res.data
+  const course_categories: any = {}
+
+  courses.forEach((course: any) => {
+    if (!course_categories[course.subject]) {
+      course_categories[course.subject] = course.course_description
+    }
+
+    if (!ordered_course_list.value[course.course_description]) {
+      ordered_course_list.value[course.course_description] = [course]
+    } else {
+      ordered_course_list.value[course.course_description].push(course)
+    }
+  })
+
+  course_types.value = course_categories
+
+  console.log(ordered_course_list.value)
+})
 
 const feedback_message = ref<string>('')
 
@@ -487,8 +663,8 @@ function userHasAddedCourse(course: any) {
         events.value.push({
           start: starttime,
           end: endtimes,
-          title: course.course_name,
-          content: `<p>${meeting.meeting_type_description}</p>`,
+          title: `${course.subject} ${course.course_number} - ${course.course_name}`,
+          content: `<p>${meeting.meeting_type_description} </p>`,
           class: 'health',
           course_id: course.course_id,
         })

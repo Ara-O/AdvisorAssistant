@@ -350,19 +350,32 @@ def startAdvisorAssistant():
         data = json.load(file) 
 
     course_matched_data = {}
+    
     # Loop through all the satisfied requirements and find all the course times 
     for req in requirements_not_satisfied:
+            pattern = r"([A-Z]{2,4}) ((?:\d{4}(?:/\d{4})?,?\s*)+)"
+
+            # Extract all matches
+            matches = re.findall(pattern, req)
+
             courses = []
-            # Extract the requirements since one can have multiple under it
-            course_matches = re.findall(r"([A-Z]{2,4}) (\d{4})(/\d{4})?", req)
+
+            for subject, numbers in matches:
+                # Find all course numbers, including possible `/` ranges
+                num_list = re.findall(r"\d{4}(?:/\d{4})?", numbers)
+                
+                for num in num_list:
+                    # If course number contains `/`, split it into two separate entries
+                    if '/' in num:
+                        num1, num2 = num.split('/')
+                        courses.append(f"{subject} {num1}")
+                        courses.append(f"{subject} {num2}")
+                    else:
+                        courses.append(f"{subject} {num}")
+
+            # Output the final list of parsed courses
+            # print(courses)
             
-            
-            for subject, num1, num2 in course_matches:
-                courses.append(f"{subject} {num1}")  # Add first course
-                if num2:  # If there is a second number (e.g., /1210)
-                    courses.append(f"{subject} {num2[1:]}")  
-                    
-            # courses = re.findall(r"[A-Z]{2,4} \d{4}", req)
             course_matched_data[req] = []
             
             attr_match = re.search(r'\b[A-Z]{1,2}\d\b', req)
@@ -375,11 +388,10 @@ def startAdvisorAssistant():
 
             for course in courses:
                 # Find course in JSON
-                # print(course)
-                # print(course)
+
                 subject = course.split()[0]
                 course_number = course.split()[1]
-                
+                                
                 matches = [
                     course for course in data 
                     if course["subject"] == subject and course["courseNumber"] == course_number

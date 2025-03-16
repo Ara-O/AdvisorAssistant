@@ -174,13 +174,13 @@ def clean_text(text):
     # Collapse multiple spaces into one
     text = re.sub(r'\s+', ' ', text)
             
-    text = text.replace('COMP', '')
+    # text = text.replace('COMP', '')
             
-    text = text.replace("Area Name:20 ", "")
+    # text = text.replace("Area Name:20 ", "")
     
     text = text.strip()
     
-    text = text.replace("Requirement ", "")
+    # text = text.replace("Requirement ", "")
     
     return text 
 
@@ -303,14 +303,14 @@ def process_student_profile(file):
         if row['met'] == 'Yes' and len(row['title']) > 0:
             # Append an object with title, requirement, and grade for met requirements
             requirements_met.append({
-                'title': row['title'],
+                'title': clean_text(row['title']),
                 'requirement': row['satisfied_by'],
                 'grade': row['grade'],
                 'attributes': row['attribute'].replace("KA", "")
             })
         elif row['met'] == 'No':
             # Append just the requirement string for requirements not met
-            requirements_not_met.append(row['requirement'])
+            requirements_not_met.append(clean_text(row['requirement']))
 
     return {
         "requirements_satisfied":  requirements_met,
