@@ -19,8 +19,7 @@ fi
 # --- Download and install ChromeDriver ---
 if [[ ! -f $STORAGE_DIR/chrome/chromedriver ]]; then
   echo "...Downloading ChromeDriver"
-  # Replace with your specific ChromeDriver version, e.g., 94.0.4606.61
-  CHROMEDRIVER_VERSION=YOUR_CHROMEDRIVER_VERSION
+  CHROMEDRIVER_VERSION=116.0.5845.96  # Replace with your actual version
   wget -P $STORAGE_DIR/chrome https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
   unzip $STORAGE_DIR/chrome/chromedriver_linux64.zip -d $STORAGE_DIR/chrome
   chmod +x $STORAGE_DIR/chrome/chromedriver
