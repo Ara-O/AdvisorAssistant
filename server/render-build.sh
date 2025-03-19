@@ -4,6 +4,7 @@ set -o errexit
 
 STORAGE_DIR=/opt/render/project/.render
 
+# Install Chrome if not cached
 if [[ ! -d $STORAGE_DIR/chrome ]]; then
   echo "...Downloading Chrome"
   mkdir -p $STORAGE_DIR/chrome
@@ -11,10 +12,25 @@ if [[ ! -d $STORAGE_DIR/chrome ]]; then
   wget -P ./ https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
   dpkg -x ./google-chrome-stable_current_amd64.deb $STORAGE_DIR/chrome
   rm ./google-chrome-stable_current_amd64.deb
-  cd $HOME/project/src # Make sure we return to where we were
+  cd $HOME/project/src # Return to original directory
 else
   echo "...Using Chrome from cache"
 fi
 
-# be sure to add Chromes location to the PATH as part of your Start Command
+# Install ChromeDriver if not cached
+if [[ ! -d $STORAGE_DIR/chromedriver ]]; then
+  echo "...Downloading ChromeDriver"
+  mkdir -p $STORAGE_DIR/chromedriver
+  cd $STORAGE_DIR/chromedriver
+  CHROME_VERSION=$(google-chrome --version | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')
+  wget -P ./ https://chromedriver.storage.googleapis.com/${CHROME_VERSION}/chromedriver_linux64.zip
+  unzip chromedriver_linux64.zip
+  rm chromedriver_linux64.zip
+  cd $HOME/project/src
+else
+  echo "...Using ChromeDriver from cache"
+fi
+
+# Add Chrome and ChromeDriver to PATH
 export PATH="${PATH}:/opt/render/project/.render/chrome/opt/google/chrome"
+export PATH="${PATH}:/opt/render/project/.render/chromedriver"

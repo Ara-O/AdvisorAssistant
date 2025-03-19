@@ -97,12 +97,18 @@ def proxy():
 
 def fetch_cookies(term_name):
     chrome_options = Options()
+    chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome"  # Set Chrome binary path
     chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
     chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu") 
     chrome_options.add_argument("--enable-logging")
-    driver = webdriver.Chrome(options=chrome_options)
+
+    driver = webdriver.Chrome(
+        executable_path="/opt/render/project/.render/chromedriver/chromedriver",  # Set ChromeDriver path
+        options=chrome_options
+    )
+
 
     print("Launching selenium...")
     
