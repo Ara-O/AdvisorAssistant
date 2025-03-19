@@ -26,11 +26,19 @@ if [[ ! -d $STORAGE_DIR/chromedriver ]]; then
   mkdir -p $STORAGE_DIR/chromedriver
   cd $STORAGE_DIR/chromedriver
 
-  # Use the correct path for Chrome binary to get the version
-  CHROME_VERSION=$(/opt/render/project/.render/chrome/opt/google/chrome/google-chrome --version | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')
-
-  # Download the matching ChromeDriver
-  wget -P ./ "https://chromedriver.storage.googleapis.com/${CHROME_VERSION}/chromedriver_linux64.zip"
+  # Get the full version from Chrome binary (e.g., "134.0.6998.0")
+  CHROME_VERSION_FULL=$(/opt/render/project/.render/chrome/opt/google/chrome/google-chrome --version | awk '{print $3}')
+  
+  # Extract the major.minor.build (e.g., "134.0.6998")
+  CHROME_VERSION_PREFIX=$(echo $CHROME_VERSION_FULL | cut -d'.' -f1-3)
+  
+  # Query the latest available ChromeDriver version for your Chrome version
+  CHROME_DRIVER_VERSION=$(wget -qO- "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION_PREFIX}")
+  
+  echo "Using Chrome version: $CHROME_VERSION_FULL"
+  echo "Matching ChromeDriver version: $CHROME_DRIVER_VERSION"
+  
+  wget -P ./ "https://chromedriver.storage.googleapis.com/${CHROME_DRIVER_VERSION}/chromedriver_linux64.zip"
   unzip chromedriver_linux64.zip
   rm chromedriver_linux64.zip
   cd $HOME/project/src
