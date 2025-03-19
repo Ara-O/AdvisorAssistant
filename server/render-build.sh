@@ -17,13 +17,20 @@ else
   echo "...Using Chrome from cache"
 fi
 
+# Add Chrome to PATH before using it
+export PATH="${PATH}:/opt/render/project/.render/chrome/opt/google/chrome"
+
 # Install ChromeDriver if not cached
 if [[ ! -d $STORAGE_DIR/chromedriver ]]; then
   echo "...Downloading ChromeDriver"
   mkdir -p $STORAGE_DIR/chromedriver
   cd $STORAGE_DIR/chromedriver
-  CHROME_VERSION=$(google-chrome --version | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')
-  wget -P ./ https://chromedriver.storage.googleapis.com/${CHROME_VERSION}/chromedriver_linux64.zip
+
+  # Use the correct path for Chrome binary to get the version
+  CHROME_VERSION=$(/opt/render/project/.render/chrome/opt/google/chrome --version | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')
+
+  # Download the matching ChromeDriver
+  wget -P ./ "https://chromedriver.storage.googleapis.com/${CHROME_VERSION}/chromedriver_linux64.zip"
   unzip chromedriver_linux64.zip
   rm chromedriver_linux64.zip
   cd $HOME/project/src
@@ -31,6 +38,5 @@ else
   echo "...Using ChromeDriver from cache"
 fi
 
-# Add Chrome and ChromeDriver to PATH
-export PATH="${PATH}:/opt/render/project/.render/chrome/opt/google/chrome"
+# Add ChromeDriver to PATH
 export PATH="${PATH}:/opt/render/project/.render/chromedriver"
