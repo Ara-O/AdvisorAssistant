@@ -27,7 +27,7 @@ if [[ ! -d $STORAGE_DIR/chromedriver ]]; then
   cd $STORAGE_DIR/chromedriver
 
   # Use the correct path for Chrome binary to get the version
-  CHROME_VERSION=$(/opt/render/project/.render/chrome/opt/google/chrome --version | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')
+  CHROME_VERSION=$(/opt/render/project/.render/chrome/opt/google/chrome/google-chrome --version | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')
 
   # Download the matching ChromeDriver
   wget -P ./ "https://chromedriver.storage.googleapis.com/${CHROME_VERSION}/chromedriver_linux64.zip"
