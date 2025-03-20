@@ -130,7 +130,7 @@ def fetch_cookies(term_name):
     # service = Service(executable_path="/opt/render/project/bin/chromedriver")
     # chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome/chrome"
     # driver = webdriver.Chrome(service=service, options=chrome_options)
-    driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
+    driver = webdriver.Chrome(ChromeDriverManager().install())
 
     print("Launching selenium...")
     
