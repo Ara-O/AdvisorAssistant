@@ -18,9 +18,9 @@ fi
 
 # be sure to add Chromes location to the PATH as part of your Start Command
 # export PATH="${PATH}:/opt/render/project/.render/chrome/opt/google/chrome"
-echo "...Downloading Chromedriver..."
-wget -O /tmp/chromedriver.zip "http://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip"
-echo "...Installing Chromedriver..."
-unzip /tmp/chromedriver.zip -d /opt/render/project/bin
-echo "...Cleaning Up..."
-rm /tmp/chromedriver.zip
+# echo "...Downloading Chromedriver..."
+# wget -O /tmp/chromedriver.zip "http://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip"
+# echo "...Installing Chromedriver..."
+# unzip /tmp/chromedriver.zip -d /opt/render/project/bin
+# echo "...Cleaning Up..."
+# rm /tmp/chromedriver.zip
