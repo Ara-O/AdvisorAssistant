@@ -123,6 +123,7 @@ def fetch_cookies(term_name):
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu") 
     chrome_options.add_argument("--enable-logging")
+    chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome/chrome"
     driver = webdriver.Chrome(options=chrome_options)
 
     print("Launching selenium...")
