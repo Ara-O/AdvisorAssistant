@@ -42,6 +42,8 @@ def formatResults(courses):
         course_dict["course_number"] = course["courseNumber"]
         course_dict["course_description"] = course["subjectDescription"]
         course_dict["attributes"] = course["sectionAttributes"]
+        course_dict["faculty"] = [faculty["displayName"] for faculty in course["faculty"]]
+
         course_dict["meeting_times"] = []
         
         meetings = course["meetingsFaculty"]
@@ -77,6 +79,25 @@ def health():
     return "healthy :D"
 
             
+@app.route('/fetch_course', methods=['GET'])
+def fetch_course_with_subject_and_number():
+    subj = request.args.get('subject')
+    course_num = request.args.get("number")
+
+    with open("fall2025.json", "r") as file:
+        courses = json.load(file)
+
+    matching_courses = [
+        course for course in courses 
+        if course.get("subject") == subj and str(course.get("courseNumber")) == str(course_num) and (str(course.get("campusDescription")) == "McNichols Campus" or str(course.get("campusDescription")) == "Online" )
+    ]
+
+    if matching_courses:
+        processed_results = formatResults(matching_courses)
+        
+        return processed_results, 200
+    
+    return [], 200
 
 @app.route('/course_proxy', methods=['GET'])
 def proxy():

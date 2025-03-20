@@ -43,54 +43,55 @@
       <div class="flex gap-10 flex-row">
         <div class="max-w-[400px] w-full min-w-[300px]">
           <h2 class="text-xl font-text font-bold mb-1">All Courses</h2>
-          <div class="flex gap-4">
-            <div class="mt-3 mb-3">
-              <label for="name_search" class="block font-semibold">Search by Course Title</label>
-              <input
-                type="text"
-                id="name_search"
-                v-model="search_by_name_field"
-                class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
-                placeholder="Search By Course Title"
-              />
-            </div>
-            <div class="mt-3 mb-3">
-              <label for="name_search" class="block font-semibold">Search by Type</label>
+          <div class="flex gap-4 mt-3 mb-3">
+            <div class="w-full">
+              <label for="subject_search" class="block font-semibold">Subject</label>
               <select
                 type="text"
-                id="name_search"
-                v-model="search_by_course_type"
-                class="border border-solid mt-2 px-3 w-36 font-text text-sm py-2 border-gray-300 rounded-sm"
-                placeholder="Search By Name"
+                id="subject_search"
+                v-model="search_by_course_subject"
+                class="border border-solid mt-2 px-3 w-full h-9 font-text text-sm py-2 border-gray-300 rounded-sm"
+                :class="search_by_course_subject === null ? 'text-gray-500' : ''"
+                placeholder="Subject"
               >
-                <option :value="null">All Types</option>
+                <option :value="null">Show all Subjects</option>
                 <option :value="acronym" v-for="(full_title, acronym) in course_types">
                   {{ acronym }}: {{ full_title }}
                 </option>
               </select>
             </div>
-          </div>
-          <div class="mt-3 mb-3 gap-3 flex">
-            <span>
-              <label for="name_search" class="block font-semibold">Attribute</label>
-              <input
-                type="text"
-                id="name_search"
-                v-model="search_by_attribute_field"
-                class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
-                placeholder="Search By Attribute"
-              />
-            </span>
-            <span>
+            <div class="w-full">
               <label for="course_no_search" class="block font-semibold">Course Number</label>
               <input
                 type="text"
                 id="course_no_search"
                 v-model="search_by_course_no_field"
-                class="border border-solid mt-2 px-3 w-36 font-text text-sm py-2 border-gray-300 rounded-sm"
+                class="border border-solid mt-2 px-3 h-9 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
                 placeholder="Search By No."
               />
-            </span>
+            </div>
+          </div>
+          <div class="mt-3 mb-3 gap-3 flex">
+            <div>
+              <label for="name_search" class="block font-semibold">Course Title</label>
+              <input
+                type="text"
+                id="name_search"
+                v-model="search_by_name_field"
+                class="border border-solid mt-2 px-3 w-full h-9 font-text text-sm py-2 border-gray-300 rounded-sm"
+                placeholder="Search By Course Title"
+              />
+            </div>
+            <div>
+              <label for="name_search" class="block font-semibold">Attribute</label>
+              <input
+                type="text"
+                id="name_search"
+                v-model="search_by_attribute_field"
+                class="border border-solid mt-2 px-3 w-full h-9 font-text text-sm py-2 border-gray-300 rounded-sm"
+                placeholder="Search By Attribute"
+              />
+            </div>
           </div>
           <div class="max-h-[500px] h-auto box-border overflow-auto">
             <div v-for="(courses, category) in filtered_course_list" class="my-2">
@@ -117,15 +118,19 @@
                   <p class="text-[15px]">
                     Section {{ course.section }} | Credits: {{ course.credits }}
                   </p>
-                  <p v-if="course.attributes && course.attributes.length > 0">
+                  <p v-if="course.attributes && course.attributes.length > 0" class="text-[15px]">
                     Attributes: {{ formatCourseAttributes(course) }}
+                  </p>
+                  <p v-if="course.faculty && course.faculty.length > 0" class="text-[15px]">
+                    Faculty: {{ course.faculty.join(', ') }}
                   </p>
                   <!-- <p v-if="course.credits"></p> -->
                 </div>
               </details>
             </div>
           </div>
-          <h2 class="text-xl font-text font-bold mt-5">Selected Courses</h2>
+          <div class="h-0.5 bg-blue-50 my-5 rounded-full"></div>
+          <h2 class="text-xl font-text font-bold">Selected Courses</h2>
           <p class="my-3" v-if="chosen_courses.length !== 0">
             <span @click="copyToClipboard" class="underline cursor-pointer">Copy to Clipboard</span>
             | Total Credits:
@@ -234,7 +239,7 @@ const use_cache = ref<boolean>(true)
 const search_by_name_field = ref<string>('')
 const search_by_attribute_field = ref<string>('')
 const search_by_course_no_field = ref<string>('')
-const search_by_course_type = ref<string | null>(null)
+const search_by_course_subject = ref<string | null>(null)
 const feedback_popup_is_visible = ref<boolean>(false)
 
 function onEventClick(event: any) {
@@ -274,11 +279,11 @@ const filtered_course_list = computed(() => {
   }
 
   // Filter by course type
-  if (search_by_course_type.value && search_by_course_type.value.trim() !== '') {
+  if (search_by_course_subject.value && search_by_course_subject.value.trim() !== '') {
     for (let key in filtered_courses) {
       filtered_courses[key] = filtered_courses[key].filter((course: any) =>
         // @ts-ignore
-        course.subject.toLowerCase().includes(search_by_course_type.value.toLowerCase()),
+        course.subject.toLowerCase().includes(search_by_course_subject.value.toLowerCase()),
       )
     }
   }

@@ -102,9 +102,9 @@
       <!-- PROCESSED REQS SECTION -->
       <section class="p-5 flex gap-8" v-else>
         <div class="w-lg">
-          <div class="h-[75vh] overflow-auto">
+          <div class="h-[75vh] pb-10 box-border overflow-auto">
             <h1 class="font-title text-2xl mb-3 font-medium">Missing Requirements</h1>
-            <div class="mb-3">
+            <div class="mb-3 cursor-pointer">
               <label for="hide_courses_not_offered">Hide Courses that are not Offered</label>
               <input
                 type="checkbox"
@@ -113,14 +113,43 @@
                 v-model="hide_courses_not_offered"
               />
             </div>
-            <p class="underline cursor-pointer mb-4" @click="course_viewer_popup_is_visible = true">
-              Open Course Viewer
-            </p>
-            <p class="mb-3">
+            <div>
+              <p>Add a Course not shown below</p>
+              <div class="flex gap-4 h-9 mt-3 mb-5">
+                <select
+                  type="text"
+                  id="subject_search"
+                  v-model="add_course_subject"
+                  class="border border-solid h-10 px-3 w-36 font-text text-sm py-2 border-gray-300 rounded-sm"
+                  placeholder="Search By Subject"
+                >
+                  <option :value="null">Subject</option>
+                  <option :value="acronym" v-for="(full_title, acronym) in course_types">
+                    {{ acronym }}: {{ full_title }}
+                  </option>
+                </select>
+                <input
+                  type="text"
+                  v-model="add_course_number"
+                  class="border border-solid px-3 w-full h-10 font-text text-sm py-2 border-gray-300 rounded-sm"
+                  placeholder="Course Number"
+                />
+                <button
+                  @click="fetchCourseWithSubjectAndNumber"
+                  class="bg-udmercy-blue w-30 h-10 cursor-pointer rounded-md text-2xl text-white"
+                >
+                  <p class="text-4xl">+</p>
+                </button>
+              </div>
+            </div>
+            <!-- <p class="underline cursor-pointer mb-4" @click="course_viewer_popup_is_visible = true">
+               Viewer
+            </p> -->
+            <!-- <p class="mb-3">
               Outstanding courses are automatically fetched based on either their course subject or
               the necessary attributes
-            </p>
-            <div class="max-h-[85vh] w-96 overflow-auto">
+            </p> -->
+            <div class="max-h-[85vh] w-96">
               <div v-for="(val, key) in processed_requirements">
                 <details v-if="val.length > 0 || hide_courses_not_offered === false">
                   <summary class="font-title text-xl my-2">{{ key }}</summary>
@@ -148,10 +177,16 @@
                             : ''
                         }}
                       </p>
-                      <p v-if="course.attributes && course.attributes.length > 0">
+                      <p
+                        v-if="course.attributes && course.attributes.length > 0"
+                        class="text-[15px]"
+                      >
                         Attributes: {{ formatCourseAttributes(course) }}
                       </p>
-                      <p v-if="course.credits">Credits: {{ course.credits }}</p>
+                      <p v-if="course.credits" class="text-[15px]">Credits: {{ course.credits }}</p>
+                      <p v-if="course.faculty && course.faculty.length > 0" class="text-[15px]">
+                        Faculty: {{ course.faculty.join(', ') }}
+                      </p>
                     </div>
                   </div>
 
@@ -160,8 +195,9 @@
               </div>
             </div>
           </div>
+          <div class="h-0.5 my-5 bg-gray-200 rounded-sm"></div>
           <div>
-            <h1 class="font-title text-2xl mb-3 mt-3 font-medium">
+            <h1 class="font-title text-2xl mb-3 font-medium">
               Chosen Courses ({{ totalCredits }} credits)
             </h1>
             <p class="">
@@ -252,7 +288,7 @@
         Feedback/Comments
       </button>
     </div>
-    <Dialog
+    <!-- <Dialog
       v-model:visible="course_viewer_popup_is_visible"
       modal
       header="Course Viewer"
@@ -261,25 +297,25 @@
       <div class="w-[50vw] min-w-[300px]">
         <div class="flex gap-4">
           <div class="">
-            <label for="name_search" class="block font-semibold">Search by Course Title</label>
+            <label for="name_search" class="block font-semibold">Course Title</label>
             <input
               type="text"
               id="name_search"
               v-model="search_by_name_field"
               class="border border-solid mt-2 px-3 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
-              placeholder="Search By Course Title"
+              placeholder="Course Title"
             />
           </div>
           <div class="">
-            <label for="name_search" class="block font-semibold">Search by Type</label>
+            <label for="subject_search" class="block font-semibold">Subject</label>
             <select
               type="text"
-              id="name_search"
+              id="subject_search"
               v-model="search_by_course_type"
               class="border border-solid mt-2 h-10 px-3 w-36 font-text text-sm py-2 border-gray-300 rounded-sm"
-              placeholder="Search By Name"
+              placeholder="Search By Subject"
             >
-              <option :value="null">All Types</option>
+              <option :value="null">All Subjects</option>
               <option :value="acronym" v-for="(full_title, acronym) in course_types">
                 {{ acronym }}: {{ full_title }}
               </option>
@@ -332,13 +368,12 @@
                 <p v-if="course.attributes && course.attributes.length > 0">
                   Attributes: {{ formatCourseAttributes(course) }}
                 </p>
-                <!-- <p v-if="course.credits"></p> -->
               </div>
             </details>
           </div>
         </div>
       </div>
-    </Dialog>
+    </Dialog> -->
     <Dialog
       v-model:visible="feedback_popup_is_visible"
       modal
@@ -389,7 +424,7 @@ const fileupload = ref()
 const events = ref<any>([])
 const course_types = ref<any>([])
 
-const hide_courses_not_offered = ref<boolean>(false)
+const hide_courses_not_offered = ref<boolean>(true)
 const course_viewer_popup_is_visible = ref<boolean>(false)
 const chosen_courses = ref<any>([])
 const course_prerequisites = ref<any>([])
@@ -399,6 +434,8 @@ const search_by_name_field = ref<string>('')
 const search_by_attribute_field = ref<string>('')
 const search_by_course_no_field = ref<string>('')
 const search_by_course_type = ref<string | null>(null)
+const add_course_number = ref<string>('')
+const add_course_subject = ref<string | null>(null)
 
 const upload_url = computed(() => {
   return `${import.meta.env.VITE_API_URL}/upload_degree_evaluation`
@@ -463,6 +500,43 @@ function formatCourseAttributes(course: any) {
   })
 
   return attrs.join(' | ')
+}
+
+async function fetchCourseWithSubjectAndNumber() {
+  try {
+    let res = await axios.get(`${import.meta.env.VITE_API_URL}/fetch_course`, {
+      params: {
+        subject: add_course_subject.value,
+        number: add_course_number.value,
+      },
+    })
+
+    if (res.data.length !== 0) {
+      processed_requirements.value[`${add_course_subject.value} ${add_course_number.value}`] =
+        res.data
+
+      toast.clear()
+      toast('Course Added to List', {
+        type: TYPE.INFO,
+        timeout: 10000,
+      })
+    }
+
+    // courses.forEach((course: any) => {
+    //   // processed_requirements
+    //   if (!course_categories[course.subject]) {
+    //     course_categories[course.subject] = course.course_description
+    //   }
+
+    //   if (!ordered_course_list.value[course.course_description]) {
+    //     ordered_course_list.value[course.course_description] = [course]
+    //   } else {
+    //     ordered_course_list.value[course.course_description].push(course)
+    //   }
+    // })
+
+    console.log(res)
+  } catch (err) {}
 }
 
 const retrieved_terms = ref({})

@@ -224,6 +224,26 @@ def parse_html_table(table):
         grid.append(row_data)
     return grid
 
+def clean_duplicate_not_met_requirements(course_list):
+    # Extract courses that fulfill requirements
+    met_requirements = {}
+    pattern = re.compile(r"Met with program requirement: ([A-Z]+ \d+)")
+    
+    for course in course_list:
+        match = pattern.search(course)
+        if match:
+            met_course = match.group(1)
+            met_requirements[course] = met_course
+    
+    # Filter out redundant requirements
+    filtered_list = []
+    for course in course_list:
+        if course in met_requirements and met_requirements[course] in course_list:
+            continue  # Skip redundant requirement
+        filtered_list.append(course)
+    
+    return filtered_list
+
 def process_student_profile(file):
     mhtml_file = file
     
@@ -312,9 +332,11 @@ def process_student_profile(file):
             # Append just the requirement string for requirements not met
             requirements_not_met.append(clean_text(row['requirement']))
 
+    filtered_requirements_not_met = clean_duplicate_not_met_requirements(requirements_not_met)
+
     return {
         "requirements_satisfied":  requirements_met,
-        "requirements_not_satisfied": requirements_not_met   
+        "requirements_not_satisfied": filtered_requirements_not_met   
     }
     
 
