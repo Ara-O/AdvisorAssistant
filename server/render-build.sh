@@ -16,15 +16,11 @@ else
   echo "...Using Chrome from cache"
 fi
 
-# Get the major version number from Chrome
-CHROME_VERSION=$(/opt/render/project/.render/chrome/opt/google/chrome/chrome --version | awk '{print $3}' | cut -d. -f1)
-echo "Detected Chrome major version: $CHROME_VERSION"
-
-# Fetch the latest ChromeDriver release for that major version
-LATEST_RELEASE=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
-echo "Latest ChromeDriver for version ${CHROME_VERSION}: ${LATEST_RELEASE}"
-
-# Download and install that ChromeDriver version
-wget -O /tmp/chromedriver.zip "http://chromedriver.storage.googleapis.com/${LATEST_RELEASE}/chromedriver_linux64.zip"
+# be sure to add Chromes location to the PATH as part of your Start Command
+# export PATH="${PATH}:/opt/render/project/.render/chrome/opt/google/chrome"
+echo "...Downloading Chromedriver..."
+wget -O /tmp/chromedriver.zip "http://chromedriver.storage.googleapis.com/$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip"
+echo "...Installing Chromedriver..."
 unzip /tmp/chromedriver.zip -d /opt/render/project/bin
+echo "...Cleaning Up..."
 rm /tmp/chromedriver.zip
