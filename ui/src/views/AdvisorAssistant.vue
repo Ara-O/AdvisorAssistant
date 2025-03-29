@@ -256,10 +256,19 @@
       </p>
       <div class="mt-2" v-if="course_prerequisites !== 'No prerequisite information available.'">
         <p v-if="course_prerequisites.length == 0">No prerequitie information available</p>
-        <div v-else v-for="req in course_prerequisites" class="leading-8">
-          <p>{{ req.subject }} {{ req.course_number }}. Minimum Grade: {{ req.min_grade }}</p>
-          <p>Requirement Satisfied: {{ checkForSatisfiedReq(req.subject, req.course_number) }}</p>
-          <hr class="my-3 text-gray-300" />
+        <div v-else>
+          <div v-for="req in course_prerequisites" class="leading-8">
+            <p v-if="req === 'and'">and</p>
+            <p v-else-if="req === 'or'">or</p>
+
+            <template v-else>
+              <p>{{ req.subject }} {{ req.course_number }}. Minimum Grade: {{ req.min_grade }}</p>
+              <p>
+                Requirement Satisfied: {{ checkForSatisfiedReq(req.subject, req.course_number) }}
+              </p>
+            </template>
+            <hr class="my-3 text-gray-300" />
+          </div>
         </div>
       </div>
       <p class="mt-2" v-else>No prerequisites were found</p>

@@ -444,11 +444,26 @@ def tokenize_prerequisites(raw_texts):
     grade_pattern = re.compile(r"Minimum Grade of ([A-FP])")
 
     for text in raw_texts:
-        text = text.replace("\n", " ").strip()  # Flatten text
+        print(text)
+        print("--0000000---")
+        
+        # text = text.replace("\n", " ").strip()  # Flatten text
+        lines = text.split("\n")
 
-        if text in ("or", "and", "(", ")"):
-            tokens.append(text)
-            continue
+        for line in lines:
+            line = line.strip()
+
+            if not line:
+                continue
+
+            print(line)
+            print("---------")
+            # If the line is just "and" or "or", treat it as a separate token
+            if line.lower() in ("and", "or"):
+                tokens.append(line.lower())  # Ensure lowercase consistency
+                continue
+
+    
 
         course_match = course_pattern.search(text)
         grade_match = grade_pattern.search(text)
