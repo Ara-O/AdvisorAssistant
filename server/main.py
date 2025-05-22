@@ -17,7 +17,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.support import expected_conditions as EC
 from pdfdataextractor import process_student_profile
 from course_scheduler.fetch_course_with_subject_and_number import fetch_courses_blueprint
-
+from course_scheduler.fetch_all_terms import fetch_all_terms_blueprint
 # Load the variables in the .env file
 load_dotenv()
 
@@ -76,7 +76,8 @@ CORS(app=app, origins=["http://localhost:5173"])
         
 #     return formattedResult
 app.register_blueprint(fetch_courses_blueprint)
-    
+app.register_blueprint(fetch_all_terms_blueprint)
+
 @app.route('/health', methods=['GET'])
 def health():
     return "The app is running!"
@@ -102,22 +103,6 @@ def health():
     
 #     return [], 200
 
-# @app.route('/course_proxy', methods=['GET'])
-# def proxy():
-#     API_URL = "https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/classSearch/getTerms" 
-#     try:
-#         # Forward the request to the actual API
-#         response = requests.get(API_URL, params={
-#             "searchTerm": "",  # Keep it empty or add a search keyword
-#             "offset": 1,       # Start from the first result
-#             "max": 10, 
-#         })
-        
-#         # Return the API response as JSON
-#         return jsonify(response.json()), response.status_code
-
-#     except requests.exceptions.RequestException as e:
-#         return jsonify({"error": str(e)}), 500
 
 # def fetch_cookies(term_name):
 #     chrome_options = Options()

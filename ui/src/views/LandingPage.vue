@@ -43,7 +43,7 @@ const router = useRouter()
 
 function goToCourseViewer() {
   router.push({
-    name: 'course-viewer',
+    name: 'select-term',
   })
 }
 

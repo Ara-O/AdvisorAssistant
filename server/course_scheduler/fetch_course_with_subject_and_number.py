@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 import json
 import os
-from utils.generate_term_cache import generate_term_cache
 from pydantic import BaseModel, ValidationError
 from  utils.format_course_details import format_course
 
@@ -37,7 +36,7 @@ def fetch_course_with_subject_and_number():
         with open(os.path.join("cache", term_cache_file), "r") as file:
             courses = json.load(file)
     except FileNotFoundError:
-        # Handle when the cache file hasn't been created yet
+        # Handle when the cache file hasn't been created yet - shouldn't really happen
         print(f"Cache file '{term_cache_file}' not found.")
         
         # TODO: Fetch the course file instead

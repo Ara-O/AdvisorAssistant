@@ -1,45 +1,9 @@
 <template>
   <main class="">
     <!-- SELECT COURSE POPUP -->
-    <section
-      v-if="!courses_have_been_fetched"
-      class="h-screen flex-col items-center flex justify-center"
-    >
-      <router-link
-        to="/"
-        class="font-text underline font-medium text-gray-600 absolute top-6 cursor-pointer left-10"
-        >Return To Home</router-link
-      >
-      <h1 class="font-title font-medium text-4xl">Choose A Term</h1>
-      <select
-        type="text"
-        class="border font-text text-center rounded-sm mt-7 h-10 w-64 border-gray-400"
-        v-model="selected_term"
-      >
-        <option :value="null" selected default disabled>Select a term</option>
-        <option
-          :value="{ code: term.code, description: term.description }"
-          v-for="(term, idx) in retrieved_terms"
-        >
-          {{ term.description }}
-        </option>
-      </select>
-
-      <span class="flex mt-3 gap-3">
-        <input type="checkbox" id="use_cache" v-model="use_cache" />
-        <label for="use_cache">Use Cache</label>
-      </span>
-      <button
-        @click="findCourses"
-        class="bg-udmercy-blue cursor-pointer font-semibold text-sm px-6 py-3 rounded-md mt-7 font-text text-white"
-      >
-        Find Courses
-      </button>
-      <p class="mt-5" v-if="courses_are_being_fetched">Fetching courses, please wait...</p>
-    </section>
 
     <!-- COURSES TREE -->
-    <section class="px-8 py-5" v-else>
+    <section class="px-8 py-5">
       <div class="flex gap-10 flex-row">
         <div class="max-w-[400px] w-full min-w-[300px]">
           <h2 class="text-xl font-text font-bold mb-1">All Courses</h2>
@@ -350,52 +314,6 @@ function formatCourseDays(course: any) {
   return days.join(' | ')
 }
 
-async function findCourses() {
-  try {
-    if (selected_term.value === null) {
-      alert('Please enter a selected term')
-      return
-    }
-
-    courses_are_being_fetched.value = true
-
-    let res = await axios.get(`${import.meta.env.VITE_API_URL}/fetch_courses`, {
-      params: {
-        term_name: selected_term.value.description,
-        term_code: selected_term.value.code,
-        awsalb: awsalb.value,
-        awsalbcors: awsalbcors.value,
-        jsessionid: jsessionid.value,
-        use_cache: use_cache.value,
-      },
-    })
-
-    const courses = res.data
-    const course_categories: any = {}
-
-    courses.forEach((course: any) => {
-      if (!course_categories[course.subject]) {
-        course_categories[course.subject] = course.course_description
-      }
-
-      if (!ordered_course_list.value[course.course_description]) {
-        ordered_course_list.value[course.course_description] = [course]
-      } else {
-        ordered_course_list.value[course.course_description].push(course)
-      }
-    })
-
-    course_types.value = course_categories
-
-    // After fetching the course
-    courses_are_being_fetched.value = false
-    courses_have_been_fetched.value = true
-  } catch (err) {
-    alert(err)
-    console.log(err)
-  }
-}
-
 function formatCourseTime(meeting: any) {
   if (!meeting.meeting_begin_time) {
     return 'No meeting time was specified'
@@ -572,17 +490,6 @@ async function sendFeedback() {
     alert('An unexpected error occured')
   }
 }
-
-// Fetch the terms
-onMounted(async () => {
-  try {
-    let res = await axios.get(`${import.meta.env.VITE_API_URL}/course_proxy`)
-    retrieved_terms.value = res.data
-  } catch (err) {
-    alert(err)
-    console.log(err)
-  }
-})
 </script>
 
 <style>
