@@ -3,19 +3,19 @@
     <div class="flex gap-10 flex-row">
       <div class="max-w-[400px] w-full min-w-[300px]">
         <h2 class="text-xl font-text font-bold mb-1">All Courses</h2>
-        <div class="flex gap-4 mt-3 mb-3">
+        <div class="flex gap-3 mt-3 mb-3">
           <div class="w-full">
             <label for="subject_search" class="block font-semibold">Subject</label>
             <select
               type="text"
               id="subject_search"
               v-model="search_by_course_subject"
-              class="border border-solid mt-2 px-3 w-full h-9 font-text text-sm py-2 border-gray-300 rounded-sm"
+              class="border border-solid mt-2 px-3 w-full h-9 font-text max-w-48 text-sm py-2 border-gray-300 rounded-sm"
               :class="search_by_course_subject === null ? 'text-gray-500' : ''"
               placeholder="Subject"
             >
               <option :value="null">Show all Subjects</option>
-              <option :value="acronym" v-for="(full_title, acronym) in course_types">
+              <option :value="acronym" v-for="(full_title, acronym) in props.course_categories">
                 {{ acronym }}: {{ full_title }}
               </option>
             </select>
@@ -26,7 +26,7 @@
               type="text"
               id="course_no_search"
               v-model="search_by_course_no_field"
-              class="border border-solid mt-2 px-3 h-9 w-full font-text text-sm py-2 border-gray-300 rounded-sm"
+              class="border border-solid mt-2 px-3 h-9 w-full max-w-48 font-text text-sm py-2 border-gray-300 rounded-sm"
               placeholder="Search By No."
             />
           </div>
@@ -38,7 +38,7 @@
               type="text"
               id="name_search"
               v-model="search_by_name_field"
-              class="border border-solid mt-2 px-3 w-full h-9 font-text text-sm py-2 border-gray-300 rounded-sm"
+              class="border border-solid mt-2 px-3 w-full h-9 max-w-48 font-text text-sm py-2 border-gray-300 rounded-sm"
               placeholder="Search By Course Title"
             />
           </div>
@@ -48,7 +48,7 @@
               type="text"
               id="name_search"
               v-model="search_by_attribute_field"
-              class="border border-solid mt-2 px-3 w-full h-9 font-text text-sm py-2 border-gray-300 rounded-sm"
+              class="border border-solid mt-2 px-3 w-full h-9 font-text max-w-48 text-sm py-2 border-gray-300 rounded-sm"
               placeholder="Search By Attribute"
             />
           </div>
@@ -143,33 +143,33 @@ import { computed, onMounted, ref } from 'vue'
 import { TYPE, useToast } from 'vue-toastification'
 import { type Term } from '@/types/types'
 
-const selected_term = ref<Term | null>(null)
-const retrieved_terms = ref<Term[]>([])
-const courses_have_been_fetched = ref<boolean>(false)
-const courses_are_being_fetched = ref<boolean>(false)
-const showDialog = false
-const selectedEvent = {} as any
-const feedback_message = ref<string>('')
+const props = defineProps(['courses_data', 'course_categories'])
+
 const events = ref<any>([])
-const ordered_course_list = ref<any>({})
 const chosen_courses = ref<any>([])
-const jsessionid = ref('')
-const course_types = ref<any>([])
-const awsalb = ref('')
-const awsalbcors = ref('')
-const use_cache = ref<boolean>(true)
 const search_by_name_field = ref<string>('')
 const search_by_attribute_field = ref<string>('')
 const search_by_course_no_field = ref<string>('')
 const search_by_course_subject = ref<string | null>(null)
-const feedback_popup_is_visible = ref<boolean>(false)
 
 function onEventClick(event: any) {
-  // console.log(event)
+  const remove_course = confirm('Do you want to remove this course?')
+
+  if (remove_course) {
+    console.log(event)
+
+    const found_course = chosen_courses.value.find(
+      (course: any) => String(course.course_id) === String(event.course_id),
+    )
+
+    if (found_course) {
+      removeCourse(found_course)
+    }
+  }
 }
 
 const filtered_course_list = computed(() => {
-  let filtered_courses = { ...ordered_course_list.value }
+  let filtered_courses = { ...props.courses_data }
 
   // Filter by course name
   if (search_by_name_field.value.trim() !== '') {
@@ -210,6 +210,7 @@ const filtered_course_list = computed(() => {
     }
   }
 
+  console.log(filtered_courses)
   return filtered_courses
 })
 
@@ -272,13 +273,6 @@ function formatCourseDays(course: any) {
   return days.join(' | ')
 }
 
-async function browseCourses() {
-  try {
-  } catch (err) {
-    alert(err)
-    console.log(err)
-  }
-}
 function formatCourseTime(meeting: any) {
   if (!meeting.meeting_begin_time) {
     return 'No meeting time was specified'
@@ -348,6 +342,7 @@ function addCourse(course: any) {
   if (course.is_selected) {
     // Deselect the course and remove it from the chosen courses list if it
     course.is_selected = false
+
     // @ts-ignore
     chosen_courses.value = chosen_courses.value.filter(
       (coursed: any) => coursed.course_id !== course.course_id,
@@ -357,6 +352,7 @@ function addCourse(course: any) {
   }
 
   course.is_selected = true
+
   chosen_courses.value.push(course)
 
   course.meeting_times.forEach((meeting: any) => {
@@ -393,20 +389,6 @@ function addCourse(course: any) {
 
       let overlap = false
       let overlap_course: any = {}
-      //Check for overlap
-      days.forEach((day) => {
-        let starttime = '2025-05-' + day + ' ' + begintime
-        let endtimes = '2025-05-' + day + ' ' + endtime
-
-        let evtoverlap = events.value.find(
-          (evt: any) => evt.start === starttime && evt.end === endtimes,
-        )
-
-        if (evtoverlap) {
-          overlap = true
-          overlap_course = evtoverlap
-        }
-      })
 
       if (overlap) {
         toast(`There is an overlap with ${overlap_course?.title || 'another course'}`, {
@@ -423,8 +405,8 @@ function addCourse(course: any) {
             start: starttime,
             end: endtimes,
             title: `${course.subject} ${course.course_number} - ${course.course_name}`,
-            content: `<p>${meeting.meeting_type_description}</p>`,
-            class: 'health',
+            content: ``,
+            class: 'valid',
             course_id: course.course_id,
           })
         })
@@ -443,12 +425,20 @@ const totalCreditsSelected = computed(() => {
 </script>
 
 <style>
-.vuecal__event.health {
+.vuecal__event.valid {
   background-color: rgba(2, 35, 99, 0.9);
   border: 1px solid rgba(2, 35, 99, 0.9);
   color: #fff;
   padding: 0px 0px;
 }
+
+.vuecal__event.overlap {
+  background-color: rgba(191, 3, 3, 0.9);
+  border: 1px solid rgba(191, 3, 3, 0.9);
+  color: #fff;
+  padding: 0px 0px;
+}
+
 .vuecal__event.sport {
   background-color: rgba(130, 11, 11, 0.9);
   border: 1px solid rgb(235, 82, 82);
