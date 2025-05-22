@@ -508,19 +508,44 @@ function addCourse(course: any) {
         days.push('11')
       }
 
+      let overlap = false
+      let overlap_course: any = {}
+      //Check for overlap
       days.forEach((day) => {
         let starttime = '2025-05-' + day + ' ' + begintime
         let endtimes = '2025-05-' + day + ' ' + endtime
 
-        events.value.push({
-          start: starttime,
-          end: endtimes,
-          title: `${course.subject} ${course.course_number} - ${course.course_name}`,
-          content: `<p>${meeting.meeting_type_description}</p>`,
-          class: 'health',
-          course_id: course.course_id,
-        })
+        let evtoverlap = events.value.find(
+          (evt: any) => evt.start === starttime && evt.end === endtimes,
+        )
+
+        if (evtoverlap) {
+          overlap = true
+          overlap_course = evtoverlap
+        }
       })
+
+      if (overlap) {
+        toast(`There is an overlap with ${overlap_course?.title || 'another course'}`, {
+          type: TYPE.ERROR,
+        })
+        course.is_selected = false
+        chosen_courses.value.pop()
+      } else {
+        days.forEach((day) => {
+          let starttime = '2025-05-' + day + ' ' + begintime
+          let endtimes = '2025-05-' + day + ' ' + endtime
+
+          events.value.push({
+            start: starttime,
+            end: endtimes,
+            title: `${course.subject} ${course.course_number} - ${course.course_name}`,
+            content: `<p>${meeting.meeting_type_description}</p>`,
+            class: 'health',
+            course_id: course.course_id,
+          })
+        })
+      }
     }
   })
 }

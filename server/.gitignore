@@ -4,3 +4,4 @@ course_data.json
 *.db
 .env
 uploads/
+*/__pycache__/
