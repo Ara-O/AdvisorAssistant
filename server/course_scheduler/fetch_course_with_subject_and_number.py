@@ -9,9 +9,9 @@ class RequestDataType(BaseModel):
     course_number: str
     term: str
     
-fetch_courses_blueprint = Blueprint('fetch_courses', __name__, url_prefix="/api")
+fetch_courses_with_subject_and_number_blueprint = Blueprint('fetch_course_with_subject_and_number', __name__, url_prefix="/api")
 
-@fetch_courses_blueprint.route('/fetch_course_with_subject_and_number', methods=['GET'])
+@fetch_courses_with_subject_and_number_blueprint.route('/fetch_course_with_subject_and_number', methods=['GET'])
 def fetch_course_with_subject_and_number():
     # Validate request
     try:

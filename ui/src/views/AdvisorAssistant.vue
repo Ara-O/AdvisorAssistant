@@ -399,12 +399,6 @@
         class="border border-gray-300 mt-[-10px] box-border p-3 rounded-md block w-full h-40"
         id="text-area"
       ></textarea>
-      <button
-        @click="sendFeedback"
-        class="bg-udmercy-blue mt-6 text-white font-text shadow-md font-medium px-5 text-sm py-3 rounded-full cursor-pointer"
-      >
-        Send Feedback
-      </button>
     </Dialog>
   </main>
 </template>

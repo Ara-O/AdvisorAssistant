@@ -7,17 +7,11 @@ import time
 import json
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
-from selenium.common.exceptions import StaleElementReferenceException
-from selenium.webdriver.support import expected_conditions as EC
+
 from pdfdataextractor import process_student_profile
-from course_scheduler.fetch_course_with_subject_and_number import fetch_courses_blueprint
+from course_scheduler.fetch_course_with_subject_and_number import fetch_courses_with_subject_and_number_blueprint
 from course_scheduler.fetch_all_terms import fetch_all_terms_blueprint
+from course_scheduler.fetch_courses import fetch_courses_blueprint
 # Load the variables in the .env file
 load_dotenv()
 
@@ -75,8 +69,9 @@ CORS(app=app, origins=["http://localhost:5173"])
 #         formattedResult.append(course_dict)
         
 #     return formattedResult
-app.register_blueprint(fetch_courses_blueprint)
+app.register_blueprint(fetch_courses_with_subject_and_number_blueprint)
 app.register_blueprint(fetch_all_terms_blueprint)
+app.register_blueprint(fetch_courses_blueprint)
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -104,84 +99,6 @@ def health():
 #     return [], 200
 
 
-# def fetch_cookies(term_name):
-#     chrome_options = Options()
-#     # chrome_path = os.path.abspath("./chrome-linux64/chrome")  # Adjust if your binary name/location differs
-#     # chrome_options.binary_location = chrome_path
-#     chrome_options.add_argument("--no-sandbox")  # Recommended for cloud environments
-#     chrome_options.add_argument("--headless=new")  # Use "--headless" if this causes issues
-#     chrome_options.add_argument("--disable-dev-shm-usage")
-#     chrome_options.add_argument("--disable-gpu") 
-#     chrome_options.add_argument("--enable-logging")
-    
-#     service = Service(executable_path="./chromedriver-linux64/chromedriver")
-#     chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome/chrome"
-#     driver = webdriver.Chrome(service=service, options=chrome_options)
-
-#     print("Launching selenium...")
-    
-#     try:
-#         # Open the website
-#         driver.get("https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/registration")
-        
-#         # Wait for the page to load
-#         driver.implicitly_wait(3)
-
-#         browse_classes_button = driver.find_element(By.ID, "classSearch")
-#         browse_classes_button.click()            
-#         driver.implicitly_wait(3)
-
-#         # Click the select button
-#         class_search_select = driver.find_element(By.ID, "select2-chosen-1")
-#         class_search_select.click()
-            
-#         # Clear if there's anything on there, then type the semester and select the first result
-#         search_input = driver.find_element(by=By.ID,value="s2id_autogen1_search")
-#         search_input.clear()
-#         search_input.send_keys(term_name)
-#         search_input.send_keys(Keys.RETURN)
-   
-#         dropdown = WebDriverWait(driver, 10).until(
-#                 EC.visibility_of_element_located((By.XPATH, "//ul[contains(@class, 'select2-results')]"))
-#         )
-            
-#         time.sleep(5)
-            
-#         results = dropdown.find_elements(By.XPATH, "//li")  # Or adjust XPath based on the actual dropdown items
-
-#         if len(results) > 0:
-#             print(f"First result text: {results[0].text}")
-#         else:
-#             print("No results found")
-
-#         try:
-#             option = WebDriverWait(driver, 10).until(
-#                 EC.element_to_be_clickable((By.XPATH, "//ul[contains(@class, 'select2-results')]//div"))
-#             )
-#             option.click()
-            
-#         except StaleElementReferenceException:
-#             # Re-find the element if it went stale
-#             option = WebDriverWait(driver, 10).until(
-#                 EC.element_to_be_clickable((By.XPATH, "//ul[contains(@class, 'select2-results')]//div"))
-#             )
- 
-#             driver.execute_script("arguments[0].click();", option)
-
-#         driver.implicitly_wait(5)
-            
-#         continue_button = driver.find_element(by=By.ID,value="term-go")
-#         continue_button.click()
-            
-#         driver.implicitly_wait(5)
-#         cookies = driver.get_cookies()
-
-#         return cookies
-#     finally:
-#         # Close the driver
-#         driver.quit()
-        
-    
 
 
 # MAILGUN_API_URL = os.getenv("MAILGUN_API_URL")
