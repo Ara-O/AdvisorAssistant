@@ -1,17 +1,12 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask
 from flask_cors import CORS
-import re
-import requests
-import time
-import json
-from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-
-from pdfdataextractor import process_student_profile
 from course_scheduler.fetch_course_with_subject_and_number import fetch_courses_with_subject_and_number_blueprint
 from course_scheduler.fetch_all_terms import fetch_all_terms_blueprint
 from course_scheduler.fetch_courses import fetch_courses_blueprint
+from advisor_assistant.upload_degree_evaluation import upload_degree_evaluation_blueprint
+
 # Load the variables in the .env file
 load_dotenv()
 
@@ -22,6 +17,7 @@ CORS(app=app, origins=["http://localhost:5173"])
 app.register_blueprint(fetch_courses_with_subject_and_number_blueprint)
 app.register_blueprint(fetch_all_terms_blueprint)
 app.register_blueprint(fetch_courses_blueprint)
+app.register_blueprint(upload_degree_evaluation_blueprint)
 
 @app.route('/health', methods=['GET'])
 def health():

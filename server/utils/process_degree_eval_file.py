@@ -21,144 +21,7 @@ def get_content(cell,index):
     remaining_text = cell_soup.div.next_sibling
 
     return remaining_text.strip()
-
-# def extract_courses(courses):
-#     i = 0
-#     courses = courses.strip()
-#     courses_list = []
-#     while i < len(courses)-3:
-#         sub_string = courses[i]+courses[i+1]+courses[i+2]
-       
-#         if  sub_string.isupper() and sub_string.isalpha():
-
-#             if i+3 < len(courses)-1:
-#                 next_char = courses[i+3]
-#                 if next_char.isupper() and next_char.isalpha():
-#                     sub_string += next_char
-#                     i += 1
-#             i += 3      
-#             u = i - 1
-
-
-#             while u < len(courses) - 3:
-#                 window = courses[u]+courses[u+1]+courses[u+2]+courses[u+3]
-#                 sub_window = courses[u] + courses[u+1] + courses[u+2]
-
-             
-#                 if sub_window.isalpha() and sub_window.isupper():
-#                     i -= 2
-#                     break
-                    
-#                 if window.isdigit():
-#                     course_name = sub_string +" "+ window
-#                     course_row = find_element(course_name)
-#                     courses_list.append({"name":course_name,"details":course_row})
-#                 u += 1
-#                 i += 1
-
-#         i += 1
-#     return courses_list
-
-def find_if_course_has_been_done(token,pre_req):
-    for course in token:
-        if course["course"] == pre_req[0]:
-            return True
-    return False
-
-def process_logical_operations(lst):
-    # First, handle all 'or' operations
-    i = 0
-    while i < len(lst):
-        if lst[i] == 'or':
-            # Replace "False or False" with the result: False
-            result = lst[i-1] or lst[i+1]
-            # Replace this triplet with the result
-            lst = lst[:i-1] + [result] + lst[i+2:]
-            i -= 1  # Step back to adjust for the shortened list
-        else:
-            i += 1
-
-    # Then, handle all 'and' operations
-    i = 0
-    while i < len(lst):
-        if lst[i] == 'and':
-            # Replace "True and False" with the result: False
-            result = lst[i-1] and lst[i+1]
-            # Replace this triplet with the result
-            lst = lst[:i-1] + [result] + lst[i+2:]
-            i -= 1  # Step back to adjust for the shortened list
-        else:
-            i += 1
-
-    return lst[0] if lst else False  # Return the single boolean result
-
-
-
-def check_if_pre_req_met(token,course):
-    if( course == "None") : return False
-    if( len(course) == 0) : return False
-
-
-    pre_req = ast.literal_eval(course[3])
- 
-    print(pre_req)
-    if pre_req == None:   # Case 1 : no pre-req
-
-        return True
     
-    if len(pre_req) == 1:
-        pre_req = pre_req[0].split(",")  
-
-        if find_if_course_has_been_done(token, pre_req):
-  
-            return True
-        else:
-
-            return False
-    
-    for i in range(len(pre_req)):
-        element = pre_req[i]
-        if element == "or" or element == "and":
-            continue
-        pre_req_details = pre_req[i].split(",")
-        pre_req[i] = find_if_course_has_been_done(token, pre_req_details)
-
-    met = (process_logical_operations(pre_req))
-
-    if met:
-
-        return True
-    else:
-    
-        return False 
-    
-
-def create_student_plan(token,needed):
-    complete_plan = ""    
-    for courses in needed:
-        plan = ""
-        for element in courses: 
-            course = find_element(element)
-            if len(course) > 0:
-                if check_if_pre_req_met(token,course):
-                    plan += element +" : "+ course[0][2] + ", "+course[0][4]
-                    plan += " or "
-        if plan != "":
-            complete_plan += plan +"\n"
-        plan = ""
-    print("******************************")
-    print("******************************")
-    print("Student plan for winter 2024: ")
-    print(complete_plan)
-    
-def clean_attribute(attr_value):
-    if attr_value:
-        decoded = html.unescape(attr_value)  # Convert &quot; → "
-        decoded = re.sub(r'3D"', '', decoded)  # Remove "3D"
-        return decoded.strip()
-    return ""
-
-
 def clean_text(text):
     text = re.sub(r'=\s*', '', text)
 
@@ -173,19 +36,14 @@ def clean_text(text):
 
     # Collapse multiple spaces into one
     text = re.sub(r'\s+', ' ', text)
-            
-    # text = text.replace('COMP', '')
-            
-    # text = text.replace("Area Name:20 ", "")
-    
+
     text = text.strip()
-    
-    # text = text.replace("Requirement ", "")
-    
+        
     return text 
 
 
-def parse_html_table(table):
+
+def parse_requirement_table(table):
     """
     Parse an HTML table handling rowspans and colspans.
     Returns a list of rows (each row is a list of cell texts).
@@ -244,7 +102,7 @@ def clean_duplicate_not_met_requirements(course_list):
     
     return filtered_list
 
-def process_student_profile(file):
+def process_degree_eval_file(file):
     mhtml_file = file
     
     # Step 1: Read and parse the MHTML file
@@ -260,28 +118,25 @@ def process_student_profile(file):
             break
 
     if html_part is None:
-        print("No HTML part found in the MHTML file.")
+        raise Exception("No MHTML was found. You may have uploaded an empty file.")
         # return jsonify({"message": "There was no HTML found"}), 400
 
-    # Decode HTML content if it is base64-encoded
-    try:
-        html_content = base64.b64decode(html_part).decode('utf-8')
-        
-    except:
-        html_content = html_part.decode('utf-8')
+
+    # Decode HTML content 
+    html_content = html_part.decode('utf-8')
 
     # Parse the HTML content
     soup = BeautifulSoup(html_content, "html.parser")
-    all_tables = soup.findAll("tbody")
+    requirement_tables = soup.findAll("tbody")
 
-    all_reqs = []
+    all_requirements = []
     
-    # Define the column names in the desired order
+    # Define the column names
     columns = ["met", "requirement", "term", "satisfied_by", "title", "attribute", "credits", "grade", "source"]
 
-    for tbody in all_tables:
+    for tbody in requirement_tables:
         # Parse the table and create a grid of cells
-        grid = parse_html_table(tbody)
+        grid = parse_requirement_table(tbody)
 
         # Convert grid rows into a list of dictionaries.
         # If a row has fewer than 9 columns (due to rowspan), we fill missing values from previous row if needed.
@@ -300,27 +155,34 @@ def process_student_profile(file):
             parsed_data.append(current)
             last_row = current
 
-        # print(df)
-        all_reqs.extend(parsed_data)
-        
-    all_reqs_df = pd.DataFrame(all_reqs, columns=columns)
-    all_reqs_df = all_reqs_df[all_reqs_df["met"].isin(["Yes", "No"])]
-    # all_reqs_df = all_reqs_df[all_reqs_df["requirement"].str.len() >= 4]
+        all_requirements.extend(parsed_data)
+    
+    print(all_requirements)
+    all_requirements_df = pd.DataFrame(all_requirements, columns=columns)
+    
+    all_requirements_df = all_requirements_df[all_requirements_df["met"].isin(["Yes", "No"])]
     pattern = r'^\s*\d+(\.\d+)?\s*$'
 
-    # Filter out rows where 'requirement' matches the decimal string pattern
-    all_reqs_df = all_reqs_df[~all_reqs_df["requirement"].str.match(pattern, na=False)]
-    all_reqs_df = all_reqs_df.drop_duplicates()
-    all_reqs_df = all_reqs_df[~all_reqs_df["requirement"].isin(["Message:", "Any additional"])]
-    
+    # # Filter out invalid rows
+    all_requirements_df = all_requirements_df[~all_requirements_df["requirement"].str.match(pattern, na=False)]
+    all_requirements_df = all_requirements_df.drop_duplicates()
+    all_requirements_df = all_requirements_df.drop_duplicates(subset=["requirement", "title"])
+    all_requirements_df = all_requirements_df[
+        ~all_requirements_df["requirement"].str.strip().str.startswith(
+            ("Message:", "Any additional", "*Reminder", "All Previously Unused Credits", "Upper division check")
+        )
+    ]
+    all_requirements_df["requirement"] = all_requirements_df["requirement"].str.replace('\u00a0', ' ', regex=False).replace(r"\/", "/")    
+    all_requirements_df["satisfied_by"] = all_requirements_df["satisfied_by"].str.replace('\u00a0', ' ', regex=False).replace(r"\/", "/")   
 
 
     requirements_met = []
     requirements_not_met = []
 
     # Iterate through each row in the DataFrame
-    for _, row in all_reqs_df.iterrows():
+    for _, row in all_requirements_df.iterrows():
         if row['met'] == 'Yes' and len(row['title']) > 0:
+            
             # Append an object with title, requirement, and grade for met requirements
             requirements_met.append({
                 'title': clean_text(row['title']),

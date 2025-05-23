@@ -5,10 +5,11 @@
       class="font-text underline font-medium text-gray-600 absolute top-6 cursor-pointer left-10"
       >Return To Home</router-link
     >
-    <h1 class="font-title font-medium text-4xl">Choose A Term</h1>
+    <h1 class="font-title font-medium text-4xl mb-3">Choose A Term</h1>
+    <p><slot></slot></p>
     <select
       type="text"
-      class="border font-text text-center rounded-sm mt-7 h-10 w-64 border-gray-400"
+      class="border font-text text-center rounded-sm h-10 mt-3 w-64 border-gray-400"
       v-model="selected_term"
     >
       <option :value="null" selected default disabled>Select a term</option>
