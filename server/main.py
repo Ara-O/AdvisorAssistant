@@ -19,56 +19,6 @@ app = Flask(__name__)
 
 CORS(app=app, origins=["http://localhost:5173"])
 
-# def formatResults(courses):
-#     formattedResult = []
-#     for course in courses:
-#         # Filter for only mcnichols campus or online
-#         if(course["campusDescription"] != "McNichols Campus" and course["campusDescription"] != "Online" ):
-#             continue
-
-#         # print("Formatting", course)
-#         course_dict = {}
-#         course_dict["course_name"] = course["courseTitle"]
-#         course_dict["course_reference_number"] = course["courseReferenceNumber"]
-#         course_dict["credits"] = course["creditHours"]
-#         course_dict["current_enrollment"] = course["enrollment"]
-#         course_dict["course_id"] = course["id"]
-#         course_dict["section"] = course["sequenceNumber"]
-#         course_dict["subject"] = course["subject"]
-#         course_dict["course_number"] = course["courseNumber"]
-#         course_dict["course_description"] = course["subjectDescription"]
-#         course_dict["attributes"] = course["sectionAttributes"]
-#         course_dict["faculty"] = [faculty["displayName"] for faculty in course["faculty"]]
-
-#         course_dict["meeting_times"] = []
-        
-#         meetings = course["meetingsFaculty"]
-
-#         #Some have multiple of this for multiple meeting times
-#         if len(meetings) > 0:
-#             for idx, meeting in enumerate(meetings):
-#                 meeting_time = {}
-#                 meeting_time["meeting_begin_time"] = meeting["meetingTime"]["beginTime"]
-#                 meeting_time["meeting_end_time"] = meeting["meetingTime"]["endTime"]
-#                 meeting_time["meeting_hours_weekly"] = meeting["meetingTime"]["hoursWeek"]
-#                 meeting_time["monday"] = meeting["meetingTime"]["monday"]
-#                 meeting_time["tuesday"] = meeting["meetingTime"]["tuesday"]
-#                 meeting_time["wednesday"] = meeting["meetingTime"]["wednesday"]
-#                 meeting_time["thursday"] = meeting["meetingTime"]["thursday"]
-#                 meeting_time["friday"] = meeting["meetingTime"]["friday"]
-#                 meeting_time["saturday"] = meeting["meetingTime"]["saturday"]
-#                 meeting_time["sunday"] = meeting["meetingTime"]["sunday"]
-#                 meeting_time["start_date"] = meeting["meetingTime"]["startDate"]
-#                 meeting_time["end_date"] = meeting["meetingTime"]["endDate"]
-#                 meeting_time["building"] = meeting["meetingTime"]["building"]
-#                 meeting_time["campus_description"] = meeting["meetingTime"]["campusDescription"]
-#                 meeting_time["meeting_type_description"] = meeting["meetingTime"]["meetingTypeDescription"]
-
-#                 course_dict["meeting_times"].append(meeting_time)
-                
-#         formattedResult.append(course_dict)
-        
-#     return formattedResult
 app.register_blueprint(fetch_courses_with_subject_and_number_blueprint)
 app.register_blueprint(fetch_all_terms_blueprint)
 app.register_blueprint(fetch_courses_blueprint)
@@ -76,30 +26,6 @@ app.register_blueprint(fetch_courses_blueprint)
 @app.route('/health', methods=['GET'])
 def health():
     return "The app is running!"
-
-            
-# @app.route('/fetch_course', methods=['GET'])
-# def fetch_course_with_subject_and_number():
-#     subj = request.args.get('subject')
-#     course_num = request.args.get("number")
-
-#     with open("fall2025.json", "r") as file:
-#         courses = json.load(file)
-
-#     matching_courses = [
-#         course for course in courses 
-#         if course.get("subject") == subj and str(course.get("courseNumber")) == str(course_num) and (str(course.get("campusDescription")) == "McNichols Campus" or str(course.get("campusDescription")) == "Online" )
-#     ]
-
-#     if matching_courses:
-#         processed_results = formatResults(matching_courses)
-        
-#         return processed_results, 200
-    
-#     return [], 200
-
-
-
 
 # MAILGUN_API_URL = os.getenv("MAILGUN_API_URL")
 # api_key = os.getenv("MAILGUN_API_KEY")

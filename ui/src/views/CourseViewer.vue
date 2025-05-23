@@ -50,6 +50,7 @@ async function fetchCourses() {
 
     toast('Fetching courses... Please be patient.', {
       type: TYPE.INFO,
+      timeout: false,
     })
 
     // Fetch all the courses
