@@ -1,16 +1,20 @@
 <template>
-  <vue-cal
-    :events="props.events"
-    selected-date="2025-05-05"
-    :time-from="8 * 60"
-    hide-view-selector
-    :time-cell-height="60"
-    hide-title-bar
-    :time-to="23 * 60"
-    :disable-views="['years', 'year', 'month']"
-    :on-event-click="onEventClick"
-  >
-  </vue-cal>
+  <div>
+    <h1 class="font-title text-2xl mb-4 font-medium">Course Calendar</h1>
+
+    <vue-cal
+      :events="props.events"
+      selected-date="2025-05-05"
+      :time-from="8 * 60"
+      hide-view-selector
+      :time-cell-height="60"
+      hide-title-bar
+      :time-to="23 * 60"
+      :disable-views="['years', 'year', 'month']"
+      :on-event-click="onEventClick"
+    >
+    </vue-cal>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -18,7 +22,7 @@
 import VueCal from 'vue-cal'
 
 const props = defineProps(['chosen_courses', 'events'])
-const emits = defineEmits(['remove_course'])
+const emits = defineEmits(['remove-course'])
 
 function onEventClick(event: any) {
   const remove_course = confirm('Do you want to remove this course?')
@@ -28,8 +32,9 @@ function onEventClick(event: any) {
       (course: any) => String(course.course_id) === String(event.course_id),
     )
 
+    found_course.is_selected = false
     if (found_course) {
-      emits('remove_course', found_course)
+      emits('remove-course', { course_id: found_course.course_id })
     }
   }
 }

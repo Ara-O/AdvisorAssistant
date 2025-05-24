@@ -110,16 +110,10 @@
 </template>
 
 <script lang="ts" setup>
-// @ts-expect-error
-import VueCal from 'vue-cal'
 import CancelIcon from '../assets/cancel-icon.png'
-import axios from 'axios'
-import Dialog from 'primevue/dialog'
 import { useClipboard } from '@vueuse/core'
-import SelectTerm from '../components/SelectTerm.vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { TYPE, useToast } from 'vue-toastification'
-import { type Term } from '@/types/types'
 
 const props = defineProps(['courses_data', 'course_categories', 'events', 'chosen_courses'])
 const emits = defineEmits(['add-course', 'remove-course'])
@@ -128,18 +122,6 @@ const search_by_name_field = ref<string>('')
 const search_by_attribute_field = ref<string>('')
 const search_by_course_no_field = ref<string>('')
 const search_by_course_subject = ref<string | null>(null)
-
-// function removeCourse(course: any) {
-//   // Deselect the course and remove it from the chosen courses list if it
-//   course.is_selected = false
-//   // @ts-ignore
-//   props.chosen_courses.value = props.chosen_courses.filter(
-//     (coursed: any) => coursed.course_id !== course.course_id,
-//   )
-//   props.events.value = props.events.value.filter(
-//     (classs: any) => classs.course_id !== course.course_id,
-//   )
-// }
 
 function formatCourseTime(meeting: any) {
   if (!meeting.meeting_begin_time) {

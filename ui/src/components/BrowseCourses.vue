@@ -15,7 +15,7 @@
       <courses-calendar
         :chosen_courses="chosen_courses"
         :events="events"
-        @remove_course="removeCourse"
+        @remove-course="removeCourse"
       ></courses-calendar>
     </div>
   </section>

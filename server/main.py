@@ -6,7 +6,8 @@ from course_scheduler.fetch_course_with_subject_and_number import fetch_courses_
 from course_scheduler.fetch_all_terms import fetch_all_terms_blueprint
 from course_scheduler.fetch_courses import fetch_courses_blueprint
 from advisor_assistant.upload_degree_evaluation import upload_degree_evaluation_blueprint
-
+from advisor_assistant.check_course_validity import check_course_validity_blueprint
+from advisor_assistant.start_advisor_assistant import start_advisor_assistant_blueprint
 # Load the variables in the .env file
 load_dotenv()
 
@@ -18,6 +19,9 @@ app.register_blueprint(fetch_courses_with_subject_and_number_blueprint)
 app.register_blueprint(fetch_all_terms_blueprint)
 app.register_blueprint(fetch_courses_blueprint)
 app.register_blueprint(upload_degree_evaluation_blueprint)
+app.register_blueprint(start_advisor_assistant_blueprint)
+app.register_blueprint(check_course_validity_blueprint)
+
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -46,56 +50,6 @@ def health():
 # app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# @app.route("/upload_degree_evaluation", methods=['POST'])
-# def upload_degree_evaluation():
-#     print("Uploaded degree evaluation")
-    
-#     if 'degree_eval' not in request.files:
-#             return "File not found", 500
-    
-#     file = request.files['degree_eval']
-    
-#     file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-    
-#     file.save(file_path)
-    
-#     requirements = process_student_profile(file_path)
-    
-#     # print(requirements)
-    
-#     # with open("fall2025.json", "r") as file:
-#     #     data = json.load(file) 
-#     #     for req in requirements['requirements_satisfied']:
-#     #         req['attributes_satisfied'] = []
-#     #         # found_attributes = False
-#     #         for full_course in data:
-#     #             if f"{full_course['subject']} {full_course['courseNumber']}" == req['course']:
-#     #                 for attr in full_course['sectionAttributes']:
-#     #                     req['attributes_satisfied'].append(str(attr['code']).replace("KA", ""))
-#     #                 break
-    
-#     # After processing, delete the file
-#     if os.path.exists(file_path):
-#         os.remove(file_path)
-    
-#     return requirements, 200
-
-
-# def extract_course_code(text):
-#     """Extracts course code from text using regex."""
-#     match = re.search(r'\b[A-Z]+\d\b', text)  
-#     return match.group(0) if match else None
-
-# def find_matching_object(json_data, attribute_code):
-#     # print(f"Looking for attribute code {attribute_code}")
-#     matching_attrs = []
-#     """Finds the object in json_data where sectionAttributes contains the attribute_code."""
-#     for obj in json_data:  # Iterate through list of objects
-#         for section in obj.get("sectionAttributes", []):  # Check sectionAttributes in each object
-#             if section.get("code") == attribute_code or (attribute_code in section.get("code")):
-#                 # print("match found yay")
-#                 matching_attrs.append(obj)  # Return the full object containing the match
-#     return matching_attrs  
 
 # @app.route("/start-assistant", methods=['POST'])
 # def startAdvisorAssistant():

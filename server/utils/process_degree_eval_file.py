@@ -157,7 +157,6 @@ def process_degree_eval_file(file):
 
         all_requirements.extend(parsed_data)
     
-    print(all_requirements)
     all_requirements_df = pd.DataFrame(all_requirements, columns=columns)
     
     all_requirements_df = all_requirements_df[all_requirements_df["met"].isin(["Yes", "No"])]
@@ -170,6 +169,11 @@ def process_degree_eval_file(file):
     all_requirements_df = all_requirements_df[
         ~all_requirements_df["requirement"].str.strip().str.startswith(
             ("Message:", "Any additional", "*Reminder", "All Previously Unused Credits", "Upper division check")
+        )
+    ]
+    all_requirements_df = all_requirements_df[
+        ~all_requirements_df["requirement"].str.strip().str.contains(
+           "Met with program requirements"
         )
     ]
     all_requirements_df["requirement"] = all_requirements_df["requirement"].str.replace('\u00a0', ' ', regex=False).replace(r"\/", "/")    

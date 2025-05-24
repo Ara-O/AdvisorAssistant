@@ -48,6 +48,8 @@ const upload_url = computed(() => {
   return `${import.meta.env.VITE_API_URL}/api/upload_degree_evaluation`
 })
 
+const emits = defineEmits(['on-file-has-been-parsed'])
+
 // Upload degree eval file
 const upload = () => {
   if (fileupload.value) {
@@ -72,17 +74,8 @@ const upload = () => {
 function onUpload(event: any) {
   try {
     const response = JSON.parse(event.xhr.response)
-
-    requirements_satisfied.value = response.requirements_satisfied
-
-    // Remove duplicates
-    requirements_satisfied.value = requirements_satisfied.value.filter(
-      (obj: any, index: any, self: any) =>
-        index === self.findIndex((o: any) => o.requirement === obj.requirement),
-    )
-
-    requirements_not_satisfied.value = response.requirements_not_satisfied
-    console.log(response)
+    toast.clear()
+    emits('on-file-has-been-parsed', response)
   } catch (err) {
     console.log('ERROR')
     console.log(err)
