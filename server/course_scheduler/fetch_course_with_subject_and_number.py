@@ -56,8 +56,9 @@ def fetch_course_with_subject_and_number():
     
     # Returns all the courses that match
     for course in matching_courses:
-        processed_course = format_course(matching_courses[0])
-        processed_courses.append(processed_course)
+        processed_course = format_course(course)
+        if(len(processed_course) != 0):
+            processed_courses.append(processed_course)
     
     return processed_courses, 200
     

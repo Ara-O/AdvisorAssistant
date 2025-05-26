@@ -64,7 +64,10 @@ def start_advisor_assistant():
                 matched_object = find_matching_object(data, attr)
                 if len(matched_object) > 0:
                     for course in matched_object:
-                        course_matched_data[req].append(format_course(course))
+                        course_data = format_course(course)
+                        
+                        if len(course_data) != 0:
+                            course_matched_data[req].append(course_data)
 
             for course in courses:
                 # Find course in JSON
@@ -81,7 +84,10 @@ def start_advisor_assistant():
                 # then it'll check if the pre-requisites are in the list of the course the user has already taken
                 if len(matches) > 0:
                     for course in matches:
-                        course_matched_data[req].append(format_course(course))
+                        course_data = format_course(course)
+                        
+                        if len(course_data) != 0:
+                            course_matched_data[req].append(course_data)
                 
     
     return course_matched_data, 200
