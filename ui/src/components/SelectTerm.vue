@@ -8,7 +8,6 @@
     <h1 class="font-title font-medium text-4xl mb-3">Choose A Term</h1>
     <p><slot></slot></p>
     <select
-      type="text"
       class="border font-text text-center rounded-sm h-10 mt-3 w-64 border-gray-400"
       v-model="selected_term"
     >

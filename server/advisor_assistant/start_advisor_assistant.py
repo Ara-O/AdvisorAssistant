@@ -1,11 +1,8 @@
 from flask import Flask, flash, request, redirect, url_for, Blueprint, jsonify
 import json
-import uuid
 from werkzeug.utils import secure_filename
 import os
-from pydantic import BaseModel, ValidationError
 from utils.format_course_details import format_course
-from utils.process_degree_eval_file import process_degree_eval_file
 import re
 
 def find_matching_object(json_data, attribute_code):
@@ -84,7 +81,7 @@ def start_advisor_assistant():
                 # then it'll check if the pre-requisites are in the list of the course the user has already taken
                 if len(matches) > 0:
                     for course in matches:
-                        course_matched_data[req].extend(format_course(course))
+                        course_matched_data[req].append(format_course(course))
                 
     
     return course_matched_data, 200

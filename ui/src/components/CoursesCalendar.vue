@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="w-full">
     <h1 class="font-title text-2xl mb-4 font-medium">Course Calendar</h1>
 
     <vue-cal

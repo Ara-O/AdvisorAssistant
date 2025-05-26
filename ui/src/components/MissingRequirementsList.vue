@@ -15,7 +15,6 @@
         <p>Add a Course not shown below</p>
         <div class="flex gap-4 h-9 mt-3 mb-5">
           <select
-            type="text"
             id="subject_search"
             v-model="add_course_subject"
             class="border border-solid h-10 px-3 w-36 font-text text-sm py-2 border-gray-300 rounded-sm"
@@ -179,7 +178,7 @@ const search_by_course_no_field = ref<string>('')
 const search_by_course_type = ref<string | null>(null)
 const add_course_number = ref<string>('')
 const add_course_subject = ref<string | null>(null)
-const hide_courses_not_offered = ref()
+const hide_courses_not_offered = ref<boolean>(true)
 const toast = useToast()
 
 const course_categories = ref<any>([])

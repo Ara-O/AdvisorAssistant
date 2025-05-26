@@ -105,6 +105,8 @@ def fetch_courses():
         response_json = response.json()
         
         total_courses = response_json["totalCount"]
+        
+        print(f"Total courses length: {total_courses}")
                
         # Start fetching the actual courses        
         courses_data = [] 
@@ -121,7 +123,7 @@ def fetch_courses():
             
             response_json = response.json()
             
-        courses_data.extend(response_json["data"])
+            courses_data.extend(response_json["data"])
             
         print("Courses have been fetched")      
           
@@ -134,7 +136,9 @@ def fetch_courses():
         # Format the course to be of proper format
         for course in courses_data:
             formatted_course = format_course(course)
-            courses.append(formatted_course)
+            
+            if len(formatted_course) != 0:
+                courses.append(formatted_course)
 
         return courses, 200
 

@@ -48,7 +48,7 @@ async function fetchCourses() {
       return
     }
 
-    toast('Fetching courses... Please be patient.', {
+    toast('Fetching courses... Please be patient, this may take a while.', {
       type: TYPE.INFO,
       timeout: false,
     })
@@ -66,6 +66,7 @@ async function fetchCourses() {
 
     data.forEach((course: any) => {
       // Define course categories/subjects
+      console.log(course.subject, course)
       if (!course_categories.value[course.subject]) {
         course_categories.value[course.subject] = course.course_description
       }

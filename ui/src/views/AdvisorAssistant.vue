@@ -59,6 +59,8 @@ async function startAdvisorAssistant() {
       term_name: selected_term.value?.description,
     })
 
+    console.log(res.data)
+
     processed_requirements.value = res.data
     progress.value++
   } catch (err) {}
