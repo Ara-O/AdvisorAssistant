@@ -27,6 +27,8 @@ def upload_degree_evaluation():
         # Storing file name under unique name
         file_uuid = uuid.uuid4()
         
+        os.makedirs("uploads", exist_ok=True)
+        
         file_path = os.path.join("uploads", str(file_uuid))
         
         file.save(file_path)
