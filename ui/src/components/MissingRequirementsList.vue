@@ -595,12 +595,21 @@ function formatCourseAttributes(course: any) {
 
 async function fetchCourseWithSubjectAndNumber() {
   try {
-    let res = await axios.get(`${import.meta.env.VITE_API_URL}/fetch_course`, {
-      params: {
-        subject: add_course_subject.value,
-        number: add_course_number.value,
-      },
+    toast.clear()
+    toast('Checking if course is offered...', {
+      type: TYPE.INFO,
     })
+
+    let res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/fetch_course_with_subject_and_number`,
+      {
+        params: {
+          term: props.selected_term.description,
+          subject: add_course_subject.value,
+          number: add_course_number.value,
+        },
+      },
+    )
 
     if (res.data.length !== 0) {
       props.processed_requirements[`${add_course_subject.value} ${add_course_number.value}`] =
@@ -609,6 +618,12 @@ async function fetchCourseWithSubjectAndNumber() {
       toast.clear()
       toast('Course Added to List', {
         type: TYPE.INFO,
+        timeout: 10000,
+      })
+    } else {
+      toast.clear()
+      toast('Course is not offered this semester', {
+        type: TYPE.ERROR,
         timeout: 10000,
       })
     }
