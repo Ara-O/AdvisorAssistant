@@ -8,14 +8,17 @@
     <h1 class="font-title font-medium text-4xl">Upload your Student Evaluation</h1>
     <p class="font-text font-medium">Upload your student evaluation file as an MHTML file</p>
     <p class="max-w-4xl leading-8">
-      To convert your degree evaluation to a .mhtml format, go to the degree evaluation page, and
-      click CTRL S. Make sure to save the webpage as one file (in .mhtml format).
+      To convert your degree evaluation to a .mhtml/.mht format, go to the degree evaluation page,
+      and click CTRL S. Make sure to save the webpage as one file (in .mhtml format).
       <span class="font-semibold">
         Your degree evaluation file is not saved anywhere (except in the process of extracting your
         courses, after which it is permanently deleted)</span
       >
     </p>
 
+    <p class="text-blue-700 cursor-pointer underline" @click="help_popup_is_visible = true">
+      Need help generating the .mhtml file?
+    </p>
     <FileUpload
       ref="fileupload"
       mode="basic"
@@ -32,15 +35,63 @@
       Upload File
     </button>
   </section>
+
+  <Dialog
+    v-model:visible="help_popup_is_visible"
+    modal
+    :dismissable-mask="true"
+    header="MHTML Guide"
+    :style="{ width: '25rem', 'font-family': 'Raleway' }"
+  >
+    <p class="font-medium underline">If you are using Chrome:</p>
+    <p class="font-medium my-2 leading-7">
+      Step 1: Install the Chrome extension '
+      <a
+        class="text-blue-800 underline"
+        target="_blank"
+        href="https://chromewebstore.google.com/detail/save-as-mhtml/ahgakckdonjmnpnegjcamhagackmjpei?hl=en&pli=1"
+        >Save as mHTML</a
+      >'
+    </p>
+
+    <p class="my-2 font-medium leading-7">
+      Step 2: On Chrome, open your portal -
+      <a href="https://my.udmercy.edu" target="_blank" class="underline text-blue-800"
+        >https://my.udmercy.edu</a
+      >
+    </p>
+
+    <p class="my-2 font-medium leading-7">
+      Step 3: Open your degree evaluation page, and click the extension. This will download a .mht
+      file
+    </p>
+    <p class="my-2 font-medium">Step 4: Upload that file here</p>
+    <hr class="mt-5 mb-5" />
+    <p class="my-2 font-medium">
+      Alternatively, or if you are not on Chrome. On your degree evaluation page, click Ctrl S
+    </p>
+    <p class="my-2 font-medium">
+      This should give you open a menu asking what name to save the file. On the type of the file,
+      select "single file." This should save the page as a .mhtml or .mht file.
+    </p>
+    <p class="mt-4 mb-4">
+      <a
+        target="_blank"
+        class="underline"
+        href="https://www.pcworld.com/article/436648/how-to-save-a-webpage-as-a-pdf-or-mht-file.html"
+        >Additional tutorial</a
+      >
+    </p>
+  </Dialog>
 </template>
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
 import { FileUpload } from 'primevue'
 import { TYPE, useToast } from 'vue-toastification'
+import { Dialog } from 'primevue'
 
-const requirements_satisfied = ref<any>([])
-const requirements_not_satisfied = ref<any>([])
+const help_popup_is_visible = ref<boolean>(false)
 const fileupload = ref<any>(null)
 const toast = useToast()
 

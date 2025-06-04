@@ -10,6 +10,12 @@
         <article class="px-10 w-1/3">
           <p class="font-medium text-xl underline mb-4">Requirements Not Satisfied:</p>
           <p class="mb-4">These reflect how they are shown in your Degree Evaluation</p>
+          <button
+            @click="removeCoursesWithUnsatisfiedPrereqs"
+            class="bg-udmercy-blue mt-0 cursor-pointer font-semibold text-sm px-6 py-3 rounded-md font-text text-white"
+          >
+            Remove courses with unsatisfied prerequisites
+          </button>
           <div class="max-h-[50vh] overflow-auto px-5">
             <p
               v-for="requirement in props.requirements.requirements_not_satisfied"
@@ -60,10 +66,26 @@
 
 <script lang="ts" setup>
 import GreenCheck from '@/assets/green-logo.webp'
+import axios from 'axios'
 
-const props = defineProps(['requirements'])
+const props = defineProps(['requirements', 'selected_term'])
 const emits = defineEmits(['start-advisor-assistant'])
+
 function startAdvisorAssistant() {
   emits('start-advisor-assistant')
+}
+
+async function removeCoursesWithUnsatisfiedPrereqs() {
+  try {
+    await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/remove-courses-with-unsatisfied-prereqs`,
+      {
+        requirements: props.requirements,
+        term: props.selected_term,
+      },
+    )
+  } catch (err) {
+    console.log(err)
+  }
 }
 </script>

@@ -2,11 +2,11 @@
   <section class="p-5 flex gap-8">
     <missing-requirements-list
       :events="events"
-      :processed_requirements="processed_requirements"
       :selected_term="props.selected_term"
       @add-course="addCourse"
       @remove-course="removeCourse"
       :chosen_courses="chosen_courses"
+      @update-requirements-list="updateRequirementsList"
     ></missing-requirements-list>
 
     <courses-calendar
@@ -24,7 +24,7 @@ import { useClipboard } from '@vueuse/core'
 import CoursesCalendar from './CoursesCalendar.vue'
 import { type Term } from '@/types/types'
 
-const props = defineProps(['processed_requirements', 'selected_term'])
+const props = defineProps(['selected_term'])
 
 const events = ref<any>([])
 const chosen_courses = ref([])
@@ -42,6 +42,8 @@ function removeCourse(course: any) {
   )
   events.value = events.value.filter((classs: any) => classs.course_id !== course.course_id)
 }
+
+function updateRequirementsList() {}
 </script>
 
 <style>

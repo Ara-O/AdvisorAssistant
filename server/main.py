@@ -9,7 +9,7 @@ from course_scheduler.fetch_courses import fetch_courses_blueprint
 from advisor_assistant.upload_degree_evaluation import upload_degree_evaluation_blueprint
 from advisor_assistant.check_course_validity import check_course_validity_blueprint
 from advisor_assistant.start_advisor_assistant import start_advisor_assistant_blueprint
-
+from advisor_assistant.remove_courses_with_unsatisfied_prereqs import remove_courses_with_unsatisfied_prereqs_blueprint
 # Load the variables in the .env file
 load_dotenv()
 
@@ -23,6 +23,7 @@ app.register_blueprint(fetch_courses_blueprint)
 app.register_blueprint(upload_degree_evaluation_blueprint)
 app.register_blueprint(start_advisor_assistant_blueprint)
 app.register_blueprint(check_course_validity_blueprint)
+app.register_blueprint(remove_courses_with_unsatisfied_prereqs_blueprint)
 
 @app.route('/health', methods=['GET'])
 def health():

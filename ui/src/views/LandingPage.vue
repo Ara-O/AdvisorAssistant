@@ -30,7 +30,7 @@
       </div>
     </section>
     <section class="float-left">
-      <img :src="DetroitMercyLogo" alt="Detroit Mercy Logo" class="w-36 md:w-50" />
+      <img :src="DetroitMercyLogo" alt="Detroit Mercy Logo" class="w-36 md:w-44" />
     </section>
   </main>
 </template>

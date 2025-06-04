@@ -12,6 +12,7 @@
 
     <verify-course-history
       :requirements="requirements"
+      :selected_term="selected_term"
       @start-advisor-assistant="startAdvisorAssistant"
       v-if="progress === 2"
     ></verify-course-history>
@@ -26,7 +27,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { provide, ref } from 'vue'
 import type { Term } from '@/types/types'
 import SelectTerm from '@/components/SelectTerm.vue'
 import UploadDegreeEvaluationFile from '@/components/UploadDegreeEvaluationFile.vue'
@@ -50,6 +51,8 @@ function fileHasBeenParsed(requirements_p: any) {
   requirements.value = requirements_p
   progress.value++
 }
+
+provide('processed_requirements', processed_requirements)
 
 async function startAdvisorAssistant() {
   try {

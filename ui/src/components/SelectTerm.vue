@@ -10,6 +10,7 @@
     <select
       class="border font-text text-center rounded-sm h-10 mt-3 w-64 border-gray-400"
       v-model="selected_term"
+      @keyup.enter="selectTerm"
     >
       <option :value="null" selected default disabled>Select a term</option>
       <option

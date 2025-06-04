@@ -18,6 +18,7 @@ def find_matching_object(json_data, attribute_code):
     
 start_advisor_assistant_blueprint = Blueprint('start_advisor_assistant', __name__, url_prefix="/api")
 
+# Takes all the requirements satisfied + those not satisfied , and fetches all the data
 @start_advisor_assistant_blueprint.route('/start-advisor-assistant', methods=['POST'])
 def start_advisor_assistant():
     request_data = request.json
@@ -88,6 +89,6 @@ def start_advisor_assistant():
                         
                         if len(course_data) != 0:
                             course_matched_data[req].append(course_data)
-                
+        
     
     return course_matched_data, 200

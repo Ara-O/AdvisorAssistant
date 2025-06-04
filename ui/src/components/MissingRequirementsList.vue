@@ -21,15 +21,18 @@
             placeholder="Search By Subject"
           >
             <option :value="null">Subject</option>
-            <option :value="acronym" v-for="(full_title, acronym) in course_categories">
-              {{ acronym }}: {{ full_title }}
-            </option>
+            <option
+              :value="acronym"
+              v-for="(full_title, acronym) in course_categories"
+              v-html="`${acronym}: ${full_title}`"
+            ></option>
           </select>
           <input
             type="text"
             v-model="add_course_number"
             class="border border-solid px-3 w-full h-10 font-text text-sm py-2 border-gray-300 rounded-sm"
             placeholder="Course Number"
+            @keyup.enter="fetchCourseWithSubjectAndNumber"
           />
           <button
             @click="fetchCourseWithSubjectAndNumber"
@@ -162,16 +165,17 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, inject, onMounted, ref } from 'vue'
 import axios from 'axios'
 import { useToast, TYPE } from 'vue-toastification'
 import CancelIcon from '../assets/cancel-icon.png'
 import { Dialog } from 'primevue'
 import { useClipboard } from '@vueuse/core'
 
-const props = defineProps(['events', 'selected_term', 'processed_requirements', 'chosen_courses'])
+const props = defineProps(['events', 'selected_term', 'chosen_courses'])
+const emits = defineEmits(['add-course', 'remove-course', 'update-requirements-list'])
+const processed_requirements = inject('processed_requirements') as any
 
-const emits = defineEmits(['add-course', 'remove-course'])
 const search_by_name_field = ref<string>('')
 const search_by_attribute_field = ref<string>('')
 const search_by_course_no_field = ref<string>('')
@@ -612,8 +616,10 @@ async function fetchCourseWithSubjectAndNumber() {
     )
 
     if (res.data.length !== 0) {
-      props.processed_requirements[`${add_course_subject.value} ${add_course_number.value}`] =
-        res.data
+      processed_requirements.value = {
+        [`${add_course_subject.value} ${add_course_number.value}`]: res.data,
+        ...processed_requirements.value,
+      }
 
       toast.clear()
       toast('Course Added to List', {

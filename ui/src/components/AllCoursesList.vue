@@ -99,8 +99,9 @@
             alt="Cancel Icon"
           />
           <p>
-            {{ course.course_name }} - {{ course.subject }} {{ course.course_number }} - CRN
-            {{ course.course_reference_number }} ({{ course.credits ?? 'No' }}
+            {{ course.course_name }} - {{ course.subject }} {{ course.course_number }} ({{
+              course.section
+            }}) - CRN {{ course.course_reference_number }} ({{ course.credits ?? 'No' }}
             credits)
           </p>
         </div>
