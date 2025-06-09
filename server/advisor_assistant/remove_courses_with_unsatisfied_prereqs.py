@@ -6,6 +6,7 @@ import os
 import requests
 from utils.format_course_details import format_course
 import re
+from pprint import pprint
 
 API_URL_PREREQS = "https://reg-prod.ec.udmercy.edu/StudentRegistrationSsb/ssb/courseSearchResults/getPrerequisites"
 
@@ -157,6 +158,8 @@ def remove_courses_with_unsatisfied_prereqs():
     term_name = term["description"]
     
     unsatisfied_requirements = requirements["requirements_not_satisfied"]
+    satisfied_requirements = requirements["requirements_satisfied"]
+
     
     pattern = re.compile(r'^[A-Z]{3,4} \d{4}$')
     filtered_unsatisfied_requirements = [c for c in unsatisfied_requirements if pattern.match(c)]
@@ -169,6 +172,8 @@ def remove_courses_with_unsatisfied_prereqs():
     all_prerequisites = []
     
     courses_with_unsatisfied_prereqs = []
+    
+    course_with_prereqs = {}
     
     for unsatisfied_course in filtered_unsatisfied_requirements: 
         print('GETTING PREREQS FOR ', unsatisfied_course)
@@ -196,13 +201,60 @@ def remove_courses_with_unsatisfied_prereqs():
                     new_title = abbrev + ' ' + str(course_title.split()[-1])
                     courses['formatted_course'] = new_title
                  
-        print(unsatisfied_course)
-        print(prereqs)
-        print("\n------------\n")   
+        # print(unsatisfied_course)
+        # print(prereqs)
+        
+        course_with_prereqs[unsatisfied_course] = prereqs
         all_prerequisites.extend(prereqs)
         
+    print(course_with_prereqs)
+    print("\n------------\n")   
+    print(satisfied_requirements)
     
+    
+    # Turn satisfied list into a dict for fast lookup
+    grade_order = {
+        'A': 4.0, 'A-': 3.7,
+        'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+        'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+        'D+': 1.3, 'D': 1.0, 'D-': 0.7,
+        'F': 0.0,
+        'TA': 2.0, 'TB': 3.0, 'TC': 2.0, 'TD': 1.0  # Assuming these are transfer equivalents
+    }
+    satisfied_dict = {entry['requirement']: entry['grade'] for entry in satisfied_requirements}
+
+    def meets_min_grade(actual_grade, required_grade):
+        if actual_grade == '' or actual_grade is None:
+            return False  # Grade missing, treat as in progress or not retrieved
+        if required_grade is None:
+            return True
+        return grade_order.get(actual_grade, -1) >= grade_order.get(required_grade, 0)
+
+    results = []
+
+    
+    final_results = {}
+
+    for req, prereqs in course_with_prereqs.items():
+        missing = []
+        for prereq in prereqs:
+            course = prereq.get('formatted_course') or prereq['course']
+            required_grade = prereq.get('min_grade')
+            actual_grade = satisfied_dict.get(course)
+
+            if actual_grade is None:
+                missing.append(f"{course} not taken")
+            elif actual_grade == '':
+                missing.append(f"Grade for {course} is missing (in progress or not available)")
+            elif not meets_min_grade(actual_grade, required_grade):
+                missing.append(f"{course} grade too low (Actual grade: {actual_grade} < Required grade: {required_grade})")
+
+        final_results[req] = {
+            'is_satisfied': len(missing) == 0,
+            'why_not_satisfied': missing
+        }
+
     # print(all_prerequisites)
     
     # Find the course's matching data
-    return {}, 200
+    return final_results, 200

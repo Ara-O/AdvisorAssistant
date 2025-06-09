@@ -12,20 +12,45 @@
           <p class="mb-4">These reflect how they are shown in your Degree Evaluation</p>
           <button
             @click="removeCoursesWithUnsatisfiedPrereqs"
-            class="bg-udmercy-blue mt-0 cursor-pointer font-semibold text-sm px-6 py-3 rounded-md font-text text-white"
+            :disabled="isCooldown"
+            class="bg-udmercy-blue mt-0 mb-5 cursor-pointer font-semibold text-sm px-6 py-3 rounded-md font-text text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Remove courses with unsatisfied prerequisites
+            {{
+              isCooldown
+                ? `Please wait ${cooldownSeconds}s`
+                : 'Highlight courses with unsatisfied prerequisites'
+            }}
           </button>
-          <div class="max-h-[50vh] overflow-auto px-5">
+          <div v-if="course_with_unsatisfied_reqs_removed" class="overflow-auto h-96">
+            <div v-for="requirement in props.requirements.requirements_not_satisfied">
+              <div v-if="prereqs_results[requirement]?.is_satisfied" class="text-green-600">
+                <p class="font-text text-left mb-5 cursor-pointer text-md font-medium leading-8">
+                  - {{ requirement }}
+                </p>
+              </div>
+              <div
+                v-else-if="prereqs_results[requirement]?.is_satisfied === false"
+                class="text-red-500"
+              >
+                <p class="font-text text-left mb-5 cursor-pointer text-md font-medium leading-8">
+                  - {{ requirement }} (
+                  {{ prereqs_results[requirement]['why_not_satisfied'].join(', ') }} )
+                </p>
+              </div>
+              <div v-else>
+                <p class="font-text text-left mb-5 cursor-pointer text-md font-medium leading-8">
+                  - {{ requirement }}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="max-h-[50vh] overflow-auto px-5" v-else>
             <p
               v-for="requirement in props.requirements.requirements_not_satisfied"
               class="font-text text-left mb-5 cursor-pointer text-md font-medium leading-8"
             >
               - {{ requirement }}
             </p>
-            <!-- <div class="mt-5">
-                    <p>Missing Courses: {{ requirement.courses.join(', ') }}</p>
-                  </div> -->
           </div>
         </article>
         <div class="h-full w-0.5 bg-gray-300 rounded-md"></div>
@@ -67,23 +92,60 @@
 <script lang="ts" setup>
 import GreenCheck from '@/assets/green-logo.webp'
 import axios from 'axios'
+import { ref } from 'vue'
+import { TYPE, useToast } from 'vue-toastification'
 
 const props = defineProps(['requirements', 'selected_term'])
 const emits = defineEmits(['start-advisor-assistant'])
+const toast = useToast()
+
+const course_with_unsatisfied_reqs_removed = ref<boolean>(false)
+const prereqs_results = ref<any>({})
+
+// Cooldown state
+const isCooldown = ref(false)
+const cooldownSeconds = ref(30)
+let cooldownTimer: any | null = null
+
+function startCooldown() {
+  isCooldown.value = true
+  cooldownSeconds.value = 30
+
+  cooldownTimer = setInterval(() => {
+    cooldownSeconds.value -= 1
+    if (cooldownSeconds.value <= 0) {
+      clearInterval(cooldownTimer!)
+      isCooldown.value = false
+    }
+  }, 1000)
+}
 
 function startAdvisorAssistant() {
   emits('start-advisor-assistant')
 }
 
 async function removeCoursesWithUnsatisfiedPrereqs() {
+  if (isCooldown.value) return
+
   try {
-    await axios.post(
+    toast('Loading... Please wait, this may take a while', {
+      type: TYPE.INFO,
+      timeout: false,
+    })
+    startCooldown()
+
+    const res = await axios.post(
       `${import.meta.env.VITE_API_URL}/api/remove-courses-with-unsatisfied-prereqs`,
       {
         requirements: props.requirements,
         term: props.selected_term,
       },
     )
+
+    prereqs_results.value = res.data
+
+    toast.clear()
+    course_with_unsatisfied_reqs_removed.value = true
   } catch (err) {
     console.log(err)
   }

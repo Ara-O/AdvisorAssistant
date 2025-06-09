@@ -50,7 +50,7 @@ const refresh_course_data = ref<boolean>(false)
 const selected_term = ref<null | Term>(null)
 
 const emits = defineEmits(['termHasBeenSelected'])
-
+let counter = 0
 async function selectTerm() {
   if (selected_term.value === null) {
     toast.clear()
@@ -60,6 +60,18 @@ async function selectTerm() {
     return
   }
 
+  // Stops users from spamming
+  if (counter != 0) {
+    toast.clear()
+    toast('Please be patient...', {
+      type: TYPE.INFO,
+      timeout: false,
+    })
+
+    return
+  }
+
+  counter++
   emits('termHasBeenSelected', selected_term.value, refresh_course_data.value)
 }
 

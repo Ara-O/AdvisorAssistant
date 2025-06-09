@@ -100,6 +100,7 @@ const upload_url = computed(() => {
 })
 
 const emits = defineEmits(['on-file-has-been-parsed'])
+let counter = 0
 
 // Upload degree eval file
 const upload = () => {
@@ -112,6 +113,14 @@ const upload = () => {
       return
     }
 
+    if (counter !== 0) {
+      toast.clear()
+      toast('Please be patint...', {
+        type: TYPE.INFO,
+      })
+      return
+    }
+
     toast.clear()
     toast('Uploading file...', {
       timeout: false,
@@ -119,6 +128,7 @@ const upload = () => {
     })
 
     fileupload.value.upload()
+    counter++
   }
 }
 

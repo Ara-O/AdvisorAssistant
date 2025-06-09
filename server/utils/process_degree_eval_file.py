@@ -200,8 +200,21 @@ def process_degree_eval_file(file):
 
     filtered_requirements_not_met = clean_duplicate_not_met_requirements(requirements_not_met)
 
+    def deduplicate_by_requirement(course_list):
+        seen = set()
+        deduped = []
+        for course in course_list:
+            req = course['requirement']
+            if req not in seen:
+                deduped.append(course)
+                seen.add(req)
+        return deduped
+
+    # usage
+    cleaned_list = deduplicate_by_requirement(requirements_met)
+
     return {
-        "requirements_satisfied":  requirements_met,
+        "requirements_satisfied":  cleaned_list,
         "requirements_not_satisfied": filtered_requirements_not_met   
     }
     

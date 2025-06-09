@@ -5,7 +5,6 @@
       <div class="w-full">
         <label for="subject_search" class="block font-semibold">Subject</label>
         <select
-          type="text"
           id="subject_search"
           v-model="search_by_course_subject"
           class="border border-solid mt-2 px-3 w-full h-9 font-text max-w-48 text-sm py-2 border-gray-300 rounded-sm"
