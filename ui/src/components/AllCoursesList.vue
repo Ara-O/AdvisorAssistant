@@ -292,6 +292,26 @@ CRN: ${course.course_reference_number}
   }
 }
 
+function toMinutes(timeStr: any) {
+  const [hour, minute] = timeStr.split(':').map(Number)
+  return hour * 60 + minute
+}
+
+function getConflictingCoursesForDay(newStart: any, newEnd: any, day: any, existingEvents: any) {
+  const newStartMin = toMinutes(newStart)
+  const newEndMin = toMinutes(newEnd)
+
+  return existingEvents.filter((event: any) => {
+    const eventDay = new Date(event.start).getDate() // assumes start is like "2025-05-06"
+    if (eventDay != day) return false
+
+    const existingStartMin = toMinutes(event.course_start_time)
+    const existingEndMin = toMinutes(event.course_end_time)
+
+    return Math.max(newStartMin, existingStartMin) < Math.min(newEndMin, existingEndMin)
+  })
+}
+
 function addCourse(course: any) {
   if (course.is_selected) {
     // Deselect the course and remove it from the chosen courses list if it
@@ -301,8 +321,6 @@ function addCourse(course: any) {
     props.chosen_courses.value = props.chosen_courses.filter(
       (coursed: any) => coursed.course_id !== course.course_id,
     )
-
-    console.log(props.events)
 
     emits('remove-course', { course_id: course.course_id })
     return
@@ -318,9 +336,25 @@ function addCourse(course: any) {
     }
   }
 
-  course.is_selected = true
+  // const toMinutes = (timeStr: any) => {
+  //   const [hour, minute] = timeStr.split(':').map(Number)
+  //   return hour * 60 + minute
+  // }
 
-  props.chosen_courses.push(course)
+  // const newStart = toMinutes(course.course_start_time)
+  // const newEnd = toMinutes(course.course_end_time)
+
+  // for (let existing of props.events) {
+  //   if (!existing.course_end_time || !existing.course_start_time) continue
+  //   const existingStart = toMinutes(existing.course_start_time)
+  //   const existingEnd = toMinutes(existing.course_end_time)
+
+  //   const overlap = Math.max(newStart, existingStart) < Math.min(newEnd, existingEnd)
+  //   if (overlap) {
+  //     alert(`"${course.title}" overlaps with "${existing.title}"`)
+  //     return
+  //   }
+  // }
 
   course.meeting_times.forEach((meeting: any) => {
     if (meeting.meeting_begin_time) {
@@ -354,20 +388,37 @@ function addCourse(course: any) {
         days.push('11')
       }
 
-      let overlap = false
-      let overlap_course: any = {}
+      days.forEach((day) => {
+        const starttime = '2025-05-' + day + ' ' + begintime
+        const endtimes = '2025-05-' + day + ' ' + endtime
 
-      if (overlap) {
-        toast(`There is an overlap with ${overlap_course?.title || 'another course'}`, {
-          type: TYPE.ERROR,
-        })
-        course.is_selected = false
-        props.chosen_courses.pop()
-      } else {
-        days.forEach((day) => {
-          let starttime = '2025-05-' + day + ' ' + begintime
-          let endtimes = '2025-05-' + day + ' ' + endtime
+        const conflicts = getConflictingCoursesForDay(
+          begintime,
+          endtime,
+          parseInt(day),
+          props.events,
+        )
 
+        if (conflicts.length > 0) {
+          const conflictTitles = conflicts
+            .map((e: any) => `${e.title} (${e.course_start_time}–${e.course_end_time})`)
+            .join('\n')
+
+          alert(
+            `Course "${course.subject} ${course.course_number}" overlaps with:\n${conflictTitles}`,
+          )
+
+          emits('add-course', {
+            start: starttime,
+            end: endtimes,
+            title: `${course.subject} ${course.course_number} - ${course.course_name}`,
+            content: ``,
+            class: 'overlap',
+            course_id: course.course_id,
+            course_start_time: begintime,
+            course_end_time: endtime,
+          })
+        } else {
           emits('add-course', {
             start: starttime,
             end: endtimes,
@@ -375,11 +426,16 @@ function addCourse(course: any) {
             content: ``,
             class: 'valid',
             course_id: course.course_id,
+            course_start_time: begintime,
+            course_end_time: endtime,
           })
-        })
-      }
+        }
+      })
     }
   })
+
+  course.is_selected = true
+  props.chosen_courses.push(course)
 }
 
 const totalCreditsSelected = computed(() => {
