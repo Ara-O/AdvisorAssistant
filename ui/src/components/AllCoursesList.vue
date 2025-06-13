@@ -60,10 +60,7 @@
             :class="{ 'selected-course': course.is_selected }"
             class="border box-border px-3 pb-5 pt-4 cursor-pointer my-2 rounded-md border-gray-300"
           >
-            <p
-              class="font-medium overflow-ellipsis w-80"
-              v-html="course.course_name + ' - ' + course.subject + ' ' + course.course_number + ''"
-            ></p>
+            <p class="font-medium overflow-ellipsis w-80" v-html="generateCourseName(course)"></p>
             <p class="text-[15px]" v-for="meeting in course.meeting_times">
               {{ meeting.meeting_type_description }} Times: {{ formatMeetingTime(meeting) }}.
               {{ formatCourseDays(meeting) !== '' ? `Days: ${formatCourseDays(meeting)}` : '' }}
@@ -74,6 +71,9 @@
             </p>
             <p v-if="course.faculty && course.faculty.length > 0" class="text-[15px]">
               Faculty: {{ course.faculty.join(', ') }}
+            </p>
+            <p v-if="course.enrollment_is_full">
+              Waitlist: {{ course.wait_capacity - course.wait_count }} spaces left
             </p>
             <!-- <p v-if="course.credits"></p> -->
           </div>
@@ -156,6 +156,15 @@ function formatMeetingTime(meeting: any) {
   const meeting_time = `${meeting.meeting_begin_time.slice(0, 2)}:${meeting.meeting_begin_time.slice(2)} - ${meeting.meeting_end_time.slice(0, 2)}:${meeting.meeting_end_time.slice(2)}`
 
   return meeting_time
+}
+
+function generateCourseName(course: any) {
+  let name = course.course_name + ' - ' + course.subject + ' ' + course.course_number
+  if (course['enrollment_is_full']) {
+    name += ' <span class="text-red-400">(FULL)<span>'
+  }
+
+  return name
 }
 function formatCourseDays(course: any) {
   const days = []
@@ -297,6 +306,16 @@ function addCourse(course: any) {
 
     emits('remove-course', { course_id: course.course_id })
     return
+  }
+
+  if (course['enrollment_is_full']) {
+    const confirm_adding_full_class = confirm(
+      'There are currently no spaces left in the class. Are you sure you want to add it?',
+    )
+
+    if (!confirm_adding_full_class) {
+      return
+    }
   }
 
   course.is_selected = true

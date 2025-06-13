@@ -43,4 +43,17 @@ def format_course(course):
             
             course_dict["meeting_times"].append(meeting_time)
     
+    # imes 
+    
+    maximum_enrollment = course["maximumEnrollment"]
+    current_enrollment = course["enrollment"]
+    
+    if maximum_enrollment == current_enrollment:
+        course_dict["enrollment_is_full"] = True
+        course_dict["wait_count"] = course["waitCount"]
+        course_dict["wait_capacity"] = course["waitCapacity"]
+    else:
+        course_dict["enrollment_is_full"] = False
+        
+        
     return course_dict
