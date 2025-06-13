@@ -49,7 +49,7 @@ def fetch_course_with_subject_and_number():
         course for course in courses 
         if course.get("subject") == request_data.subject.strip() and
         str(course.get("courseNumber")) == request_data.course_number.strip() and 
-        (str(course.get("campusDescription")) == "McNichols Campus" or str(course.get("campusDescription")) == "Online" )
+        (str(course.get("campusDescription")) == "McNichols Campus" or str(course.get("campusDescription")) == "Online"  or  str(course.get("campusDescription")) == "Online &amp; On-campus" )
     ]
 
     processed_courses = []

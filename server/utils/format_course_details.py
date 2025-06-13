@@ -1,6 +1,6 @@
 def format_course(course):
     # Filter for only mcnichols campus or online
-    if(course["campusDescription"] != "McNichols Campus" and course["campusDescription"] != "Online" ):
+    if(course["campusDescription"] != "McNichols Campus" and course["campusDescription"] != "Online" and course["campusDescription"] != "Online &amp; On-campus" ):
         return {}
 
     # Select only the fields that are relevant
